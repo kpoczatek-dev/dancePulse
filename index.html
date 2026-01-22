@@ -1,58 +1,40 @@
-<<<<<<< HEAD
-
-<!DOCTYPE html>
-<html lang="pl">
-=======
 <!DOCTYPE html>
 <html lang="pl">
 
->>>>>>> 2cb7426 (Initial commit party-generator)
 <head>
   <meta charset="UTF-8">
   <title>Generator Zestawienia Imprez</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<<<<<<< HEAD
-<body>
-  <h2>🕺 Generator Zestawienia Imprez</h2>
-
-=======
 
 <body>
-  <h2>🕺 Generator Zestawienia Imprez</h2>
+  <h2>🕺 Generator zestawień tanecznych</h2>
 
-  <!-- FILTR -->
   <div class="filters">
-    <label for="filter-select">Zakres dat:</label>
+    <label for="filter-select">Widok:</label>
     <select id="filter-select">
-      <option value="weekend" selected>Ten weekend</option>
-      <option value="next-weekend">Przyszły weekend</option>
-      <option value="all">Całe 2 tygodnie</option>
+      <option value="all">Wszystkie 14 dni</option>
+      <option value="thisweek">Ten tydzień</option>
+      <option value="weekend">Najbliższe dni</option>
     </select>
   </div>
 
-
->>>>>>> 2cb7426 (Initial commit party-generator)
   <div id="form"></div>
 
-  <label>Hashtagi:</label>
-  <input id="hashtagi" value="#SalsaKatowice #TaniecPodChmurką #SalsaChillout">
+  <div style="margin-top: 20px;">
+    <label>Hashtagi:</label><br>
+    <input id="hashtagi" style="width: 100%;" value="#Salsa #Bachata #Kizomba #Taniec #Silesia">
+  </div>
 
-  <button id="generuj-btn">Generuj post</button>
+  <button id="generuj-btn">🚀 Generuj post i ankietę</button>
 
   <h3>📋 Wygenerowany post:</h3>
-  <textarea id="wynik" rows="10"></textarea><br>
+  <textarea id="wynik" rows="10"></textarea>
   <button onclick="kopiujWynik()">📋 Kopiuj cały post</button>
 
-  <h3>🔢 Wklejka do ankiety:</h3>
-  <textarea id="ankieta" rows="6"></textarea>
-  <div id="kopiuj-ankiete"></div>
-
-  <script src="script.js"></script>
+  <h3>🔢 Daty do ankiety:</h3>
+  <textarea id="ankieta" rows="4"></textarea>
 </body>
-<<<<<<< HEAD
-</html>
-=======
+<script src="script.js"></script>
 
 </html>
->>>>>>> 2cb7426 (Initial commit party-generator)
