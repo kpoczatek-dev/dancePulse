@@ -10,11 +10,19 @@
 <body>
   <h2>🕺 Generator zestawień tanecznych</h2>
 
+  <details style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px;">
+    <summary>📥 Importuj z Facebooka (Opcja Eksperymentalna)</summary>
+    <p><small>1. Wejdź na Facebooka, otwórz konsolę (F12) i wklej skrypt `fb_scraper.js`.<br>2. Wklej skopiowany JSON
+        poniżej:</small></p>
+    <textarea id="import-fb-data" rows="3" placeholder="Wklej tutaj JSON ze schowka..." style="width: 100%;"></textarea>
+    <button id="import-btn" style="margin-top: 5px;">📥 Załaduj wydarzenia</button>
+  </details>
+
   <div class="filters">
     <label for="filter-select">Widok:</label>
     <select id="filter-select">
-      <option value="all">Wszystkie 14 dni</option>
       <option value="thisweek">Ten tydzień</option>
+      <option value="all">Wszystkie 14 dni</option>
       <option value="weekend">Najbliższe dni</option>
     </select>
   </div>
