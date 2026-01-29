@@ -42,6 +42,50 @@ document.addEventListener('DOMContentLoaded', function () {
 	]
 	const dniTygodnia = ['NIEDZIELA', 'PONIEDZIAŁEK', 'WTOREK', 'ŚRODA', 'CZWARTEK', 'PIĄTEK', 'SOBOTA']
 
+    // --- KONFIGURACJA MAPOWANIA ---
+    const adresyMap = {
+        'chorzowska 11': 'LaClave',
+        'la clave': 'LaClave',
+        'kamienna 4': 'MilPasos',
+        'zwycięstwa 52': 'Mohito',
+        'zwycięstwa 52a': 'Mohito',
+        'good mood': 'GoodMood',
+        'paderewskiego': 'GoodMood',
+        'mariacka': 'Klub Pomarańcza',
+        'plac grunwaldzki': 'NOSPR',
+        'rynek': 'Rynek',
+        'dworcowa 8': 'Stylowa Willa',
+        'rondo mogilskie 1': 'Sabrosa',
+        'dworkowa 2': 'Cavatina Hall',
+        'gravitacja': 'Gravitacja',
+        'zwycięstwa': 'Mohito', 
+        'jana pawła': 'Mohito',
+        'mohito gliwice': 'Mohito',
+        'mohito tychy': 'Mohito',
+    };
+
+    const adresMiastoSztywne = {
+        'zwycięstwa': 'Gliwice',
+        'jana pawła': 'Tychy',
+        'dworkowa 2': 'Bielsko-Biała',
+        'mohito gliwice': 'Gliwice',
+        'mohito tychy': 'Tychy'
+    };
+
+    const styleKeywords = {
+        'salsa': 'Cubana', 'cuban': 'Cubana', 'casino': 'Cubana', 'rueda': 'Cubana', 'mambo': 'Salsa',
+        'kubańskie': 'Cubana', 'wprawki': 'Cubana', 
+        'bachata': 'Bachata', 'bachat': 'Bachata', 'dominicana': 'Bachata',
+        'kizomba': 'Kizomba', 'kiz': 'Kizomba', 'semba': 'Kizomba', 'tarraxo': 'Kizomba', 'urban': 'Kizomba',
+        'zouk': 'Zouk', 'lambada': 'Zouk',
+        ' west ': 'Linia', ' wcs ': 'Linia', 'modern jive': 'Linia', 
+        'cubana': 'Cubana',
+        'rumba': 'Rumba',
+        'afro': 'Afro',
+        'koncert': 'Koncert',
+        'reggaeton': 'Reggeton', 'reggeton': 'Reggeton'
+    };
+
 	function formatujDatePL(date) {
 		const d = date.getDate().toString().padStart(2, '0')
 		const m = (date.getMonth() + 1).toString().padStart(2, '0')
@@ -418,34 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const opisInput = freeSlot.querySelector('.opis');
                         const linkInput = freeSlot.querySelector('.link');
 
-                        const adresyMap = {
-                            'chorzowska 11': 'LaClave',
-                            'la clave': 'LaClave',
-                            'kamienna 4': 'MilPasos',
-                            'zwycięstwa 52': 'Mohito',
-                            'zwycięstwa 52a': 'Mohito',
-                            'good mood': 'GoodMood',
-                            'paderewskiego': 'GoodMood',
-                            'mariacka': 'Klub Pomarańcza',
-                            'plac grunwaldzki': 'NOSPR',
-                            'rynek': 'Rynek',
-                            'dworcowa 8': 'Stylowa Willa',
-                            'rondo mogilskie 1': 'Sabrosa',
-                            'dworkowa 2': 'Cavatina Hall',
-                            'gravitacja': 'Gravitacja',
-                            'zwycięstwa': 'Mohito', 
-                            'jana pawła': 'Mohito',
-                            'mohito gliwice': 'Mohito',
-                            'mohito tychy': 'Mohito',
-                        };
 
-                        const adresMiastoSztywne = {
-                            'zwycięstwa': 'Gliwice',
-                            'jana pawła': 'Tychy',
-                            'dworkowa 2': 'Bielsko-Biała',
-                            'mohito gliwice': 'Gliwice',
-                            'mohito tychy': 'Tychy'
-                        };
 
                         let znalezioneMiasto = 'Inne';
                         let dopasowaneMiejsce = null;
@@ -521,19 +538,7 @@ document.addEventListener('DOMContentLoaded', function () {
                              miejsceSelect.dispatchEvent(new Event('change'));
                         }
 
-                        const styleKeywords = {
-                            'salsa': 'Cubana', 'cuban': 'Cubana', 'casino': 'Cubana', 'rueda': 'Cubana', 'mambo': 'Salsa',
-                            'kubańskie': 'Cubana', 'wprawki': 'Cubana', 
-                            'bachata': 'Bachata', 'bachat': 'Bachata', 'dominicana': 'Bachata',
-                            'kizomba': 'Kizomba', 'kiz': 'Kizomba', 'semba': 'Kizomba', 'tarraxo': 'Kizomba', 'urban': 'Kizomba',
-                            'zouk': 'Zouk', 'lambada': 'Zouk',
-                            ' west ': 'Linia', ' wcs ': 'Linia', 'modern jive': 'Linia', 
-                            'cubana': 'Cubana',
-                            'rumba': 'Rumba',
-                            'afro': 'Afro',
-                            'koncert': 'Koncert',
-                            'reggaeton': 'Reggeton', 'reggeton': 'Reggeton'
-                        };
+
 
                         const checkboxes = freeSlot.querySelectorAll('input.styl');
                         checkboxes.forEach(cb => cb.checked = false);
