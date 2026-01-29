@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		Chorzów: ['Taneczne Kręgi', 'Pizzeria Róża'],
 		Tychy: ['Przystań Kajakowa', 'Mohito', 'Dzika plaża'],
 		Kraków: ['Sabrosa', 'Tropical spot', 'Tauron Arena', 'Forum Tańca'],
-		'Bielsko-Biala': ['Festiwal Kubański', 'DANCE#LOVEit', 'Metrum', 'Grzyńskiego', 'Hotel Sahara'],
+		'Bielsko-Biała': ['Festiwal Kubański', 'DANCE#LOVEit', 'Metrum', 'Grzyńskiego', 'Hotel Sahara', 'Cavatina Hall'],
 		Gliwice: ['Mohito', 'LaClave', 'Rynek'],
 		Bytom: ['Majowa'],
 		Świętochłowice: ['Stylowa Willa'],
@@ -109,8 +109,50 @@ document.addEventListener('DOMContentLoaded', function () {
             toggle.style.cursor = 'pointer';
 
 			toggle.appendChild(checkbox)
-			toggle.append(` Wydarzenie taneczne ${i + 1} `) // Added space
-            toggle.appendChild(promoteLabel) // Insert AFTER text
+			toggle.append(` Wydarzenie taneczne ${i + 1} `) 
+            toggle.appendChild(promoteLabel)
+
+            // --- REORDERING BUTTONS ---
+            const controls = document.createElement('span');
+            controls.style.marginLeft = '10px';
+            
+            const btnUp = document.createElement('button');
+            btnUp.textContent = '⬆️';
+            btnUp.style.border = 'none';
+            btnUp.style.background = 'transparent';
+            btnUp.style.cursor = 'pointer';
+            btnUp.title = 'Przesuń wyżej';
+            btnUp.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const currentContainer = container;
+                const prevContainer = currentContainer.previousElementSibling;
+                // Ensure we don't move above the H3 header or if no prev sibling
+                if (prevContainer && prevContainer.tagName === 'DIV') {
+                    currentContainer.parentNode.insertBefore(currentContainer, prevContainer);
+                }
+            };
+
+            const btnDown = document.createElement('button');
+            btnDown.textContent = '⬇️';
+            btnDown.style.border = 'none';
+            btnDown.style.background = 'transparent';
+            btnDown.style.cursor = 'pointer';
+            btnDown.title = 'Przesuń niżej';
+            btnDown.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const currentContainer = container;
+                const nextContainer = currentContainer.nextElementSibling;
+                if (nextContainer) {
+                    currentContainer.parentNode.insertBefore(nextContainer, currentContainer);
+                }
+            };
+
+            controls.appendChild(btnUp);
+            controls.appendChild(btnDown);
+            toggle.appendChild(controls);
+            // --------------------------
 
 			const eventBlock = document.createElement('div')
 			eventBlock.className = 'event-block'
@@ -176,6 +218,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			checkbox.addEventListener('change', function () {
 				eventBlock.style.display = this.checked ? 'block' : 'none'
                 promoteLabel.style.display = this.checked ? 'inline-block' : 'none'
+                if (typeof updateEventCounter === 'function') updateEventCounter();
 			})
 
 			updateMiejscaOptions(selectMiasto.value)
@@ -281,59 +324,84 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const events = JSON.parse(jsonText);
             let importedCount = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
+            // Oblicz najbliższą niedzielę
+            let nextSunday = new Date(today);
+            if (today.getDay() === 0) {
+                 nextSunday = new Date(today);
+            } else {
+                 nextSunday.setDate(today.getDate() + (7 - today.getDay()));
+            }
+            nextSunday.setHours(23, 59, 59, 999);
+
+            // Helper do wyciągania ID
+            const getIds = (url) => {
+                if (!url) return [];
+                const matches = url.match(/\d{8,}/g); 
+                return matches || [];
+            };
+
+            // DEDUPLIKACJA INPUTU
+            const uniqueEvents = [];
             events.forEach(ev => {
-                // Próba parsowania daty
-                // Format FB bywa różny: "SOB., 2 LUT O 21:00", "DZISIAJ O 20:00", "JUTRO O 21:00"
-                // To jest trudne, więc zrobimy uproszczony parser szukający dnia i miesiąca
+                const newIds = getIds(ev.url);
+                const isDuplicate = uniqueEvents.some(existing => {
+                    const existingIds = getIds(existing.url);
+                    if (newIds.some(id => existingIds.includes(id))) return true;
+                    if (existing.url === ev.url) return true;
+                    return false;
+                });
                 
-                let parsedDate = parsujDateFB(ev.rawDate);
-                // Jeśli nie udało się z rawDate (np. "Popularne wśród znajomych"), spróbuj z tytułu
-                if (!parsedDate) {
-                    parsedDate = parsujDateFB(ev.title);
+                if (!isDuplicate) {
+                    uniqueEvents.push(ev);
+                } else {
+                    console.log(`Ignoruję duplikat wewnątrz JSONa: ${ev.title}`);
                 }
+            });
+
+            uniqueEvents.forEach(ev => {
+                let parsedDate = parsujDateFB(ev.rawDate);
+                if (parsedDate && parsedDate < today) {
+                    const descDate = parsujDateFB(ev.description);
+                    if (descDate && descDate >= today) parsedDate = descDate;
+                }
+                if (!parsedDate) parsedDate = parsujDateFB(ev.title);
+                if (!parsedDate) parsedDate = parsujDateFB(ev.description);
                 
                 if (!parsedDate) return;
-
-                // FILTER: Importuj tylko od DZIŚ do najbliższej niedzieli włącznie
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); // Resetujemy czas dzisiejszy na początek dnia
-
-                // Oblicz najbliższą niedzielę (tą nadchodzącą lub dzisiejszą)
-                let nextSunday = new Date(today);
-                if (today.getDay() === 0) {
-                     nextSunday = new Date(today); // Dziś niedziela
-                } else {
-                     nextSunday.setDate(today.getDate() + (7 - today.getDay()));
-                }
-                nextSunday.setHours(23, 59, 59, 999);
-
-                // Jeśli data wydarzenia jest starsza niż dziś LUB później niż ta niedziela, pomiń
                 if (parsedDate < today || parsedDate > nextSunday) return;
 
-                // Znajdź odpowiedni blok dnia
                 const dayBlock = Array.from(document.querySelectorAll('.day-block')).find(block => {
                     const d = new Date(block.dataset.date);
                     return d.getDate() === parsedDate.getDate() && d.getMonth() === parsedDate.getMonth();
                 });
 
                 if (dayBlock) {
-                    // Znajdź pierwszy wolny slot (ukryty event-block)
+                    const newIds = getIds(ev.url);
+                    const alreadyExists = Array.from(dayBlock.querySelectorAll('.event-block')).some(eb => {
+                        const linkInput = eb.querySelector('.link');
+                        const linkVal = linkInput ? linkInput.value : '';
+                        if (!linkVal || linkVal.trim() === "") return false;
+                        const existingIds = getIds(linkVal);
+                        if (newIds.some(id => existingIds.includes(id))) return true;
+                        if (linkVal === ev.url) return true;
+                        return false;
+                    });
+
+                    if (alreadyExists) {
+                        console.log(`Pominięto duplikat na liście: ${ev.title}`);
+                        return;
+                    }
+
                     const freeSlot = Array.from(dayBlock.querySelectorAll('.event-block')).find(el => el.style.display === 'none');
                     
                     if (freeSlot) {
-                        // Checkbox aktywujący
                         const checkbox = freeSlot.previousElementSibling.querySelector('.toggle-checkbox');
                         checkbox.checked = true;
                         freeSlot.style.display = 'block';
 
-                        // Pokaż przycisk promuj (jeśli był ukryty)
-                        const promoteLabel = freeSlot.previousElementSibling.querySelector('label'); 
-                        // Uwaga: nasza struktura to label > checkbox, promoteLabel
-                        // freeSlot.previousElementSibling to ten główny label (toggle)
-                        // Szukamy w nim labela od promuj.
-                        // Ale promoteLabel nie ma klasy. Dodaliśmy mu styl display manually.
-                        // Znajdźmy go po klasie inputu w środku
                         const promoteInput = freeSlot.previousElementSibling.querySelector('.promowane');
                         if (promoteInput && promoteInput.parentElement) {
                             promoteInput.parentElement.style.display = 'inline-block';
@@ -346,22 +414,33 @@ document.addEventListener('DOMContentLoaded', function () {
                         const opisInput = freeSlot.querySelector('.opis');
                         const linkInput = freeSlot.querySelector('.link');
 
-                        // --- 1. Wykrywanie MIEJSCA po adresie ---
-                        // Mapa: fragment adresu (lowercase) -> nazwa miejsca (dokładnie jak w select)
                         const adresyMap = {
                             'chorzowska 11': 'LaClave',
+                            'la clave': 'LaClave',
                             'kamienna 4': 'MilPasos',
                             'zwycięstwa 52': 'Mohito',
                             'zwycięstwa 52a': 'Mohito',
                             'good mood': 'GoodMood',
-                            'paderewskiego': 'GoodMood', // Good Mood Katowice
-                            'mariacka': 'Klub Pomarańcza', // Przykładowe, można dodać więcej
+                            'paderewskiego': 'GoodMood',
+                            'mariacka': 'Klub Pomarańcza',
                             'plac grunwaldzki': 'NOSPR',
                             'rynek': 'Rynek',
                             'dworcowa 8': 'Stylowa Willa',
                             'rondo mogilskie 1': 'Sabrosa',
                             'dworkowa 2': 'Cavatina Hall',
                             'gravitacja': 'Gravitacja',
+                            'zwycięstwa': 'Mohito', 
+                            'jana pawła': 'Mohito',
+                            'mohito gliwice': 'Mohito',
+                            'mohito tychy': 'Mohito',
+                        };
+
+                        const adresMiastoSztywne = {
+                            'zwycięstwa': 'Gliwice',
+                            'jana pawła': 'Tychy',
+                            'dworkowa 2': 'Bielsko-Biała',
+                            'mohito gliwice': 'Gliwice',
+                            'mohito tychy': 'Tychy'
                         };
 
                         let znalezioneMiasto = 'Inne';
@@ -369,23 +448,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         const locationLower = (ev.location || '').toLowerCase();
                         const titleLower = (ev.title || '').toLowerCase();
+                        const descriptionLower = (ev.description || '').toLowerCase();
+                        
+                        const textForPlace = (locationLower + ' ' + titleLower + ' ' + descriptionLower);
 
-                        // Najpierw szukamy po adresie
                         for (const [adres, miejsce] of Object.entries(adresyMap)) {
-                            if (locationLower.includes(adres)) {
+                            if (textForPlace.includes(adres)) {
                                 dopasowaneMiejsce = miejsce;
-                                // Znajdź miasto dla tego miejsca
-                                for (const [miasto, miejsca] of Object.entries(miejscaWgMiasta)) {
-                                    if (miejsca.includes(miejsce)) {
-                                        znalezioneMiasto = miasto;
+                                
+                                let forcedCity = null;
+                                for (const [key, city] of Object.entries(adresMiastoSztywne)) {
+                                    if (adres.includes(key)) {
+                                        forcedCity = city;
                                         break;
                                     }
+                                }
+
+                                if (forcedCity) {
+                                    console.log(`[CITY FORCED] Address '${adres}' forces city '${forcedCity}'`);
+                                    znalezioneMiasto = forcedCity;
+                                } else {
+                                    let bestCity = null;
+                                    for (const [miasto, miejsca] of Object.entries(miejscaWgMiasta)) {
+                                        if (miejsca.includes(miejsce)) {
+                                            if (!bestCity) bestCity = miasto; 
+                                            const miastoLower = miasto.toLowerCase();
+                                            if (textForPlace.includes(miastoLower)) {
+                                                bestCity = miasto;
+                                                break;
+                                            }
+                                            if (miastoLower.endsWith('e') || miastoLower.endsWith('a')) {
+                                                const stem = miastoLower.slice(0, -1);
+                                                if (textForPlace.includes(stem)) {
+                                                    bestCity = miasto;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    znalezioneMiasto = bestCity || 'Inne';
                                 }
                                 break;
                             }
                         }
 
-                        // Jeśli nie ma po adresie, szukamy po nazwie miasta w lokalizacji
                         if (!dopasowaneMiejsce) {
                             for (const m in miejscaWgMiasta) {
                                 if (locationLower.includes(m.toLowerCase())) {
@@ -395,10 +501,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         }
 
-                        // Ustawianie selectów
+                        console.log(`[FINAL DECISION] City: "${znalezioneMiasto}", Place: "${dopasowaneMiejsce}"`);
+
                         miastoSelect.value = znalezioneMiasto;
-                        const eventChange = new Event('change');
-                        miastoSelect.dispatchEvent(eventChange);
+                        miastoSelect.dispatchEvent(new Event('change'));
 
                         if (dopasowaneMiejsce) {
                             miejsceSelect.value = dopasowaneMiejsce;
@@ -406,47 +512,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else if (znalezioneMiasto === 'Inne') {
                             miastoInput.value = ev.location || '';
                         } else {
-                            // Znaleziono miasto, ale miejsce nieznane -> Inne
                              miejsceInput.value = ev.location || '';
                              miejsceSelect.value = 'Inne';
                              miejsceSelect.dispatchEvent(new Event('change'));
                         }
 
-                        // --- 2. Wykrywanie STYLU po słowach kluczowych ---
-                        // Mapa: słowo kluczowe -> value checkboxa
                         const styleKeywords = {
-                            'salsa': 'Salsa',
-                            'cuban': 'Salsa', // Cubana?
-                            'casino': 'Salsa',
-                            'rueda': 'Salsa',
-                            'mambo': 'Salsa',
-                            'bachata': 'Bachata',
-                            'bachat': 'Bachata',
-                            'dominicana': 'Bachata',
-                            'kizomba': 'Kizomba',
-                            'kiz': 'Kizomba',
-                            'semba': 'Kizomba',
-                            'tarraxo': 'Kizomba',
-                            'urban': 'Kizomba',
-                            'zouk': 'Zouk',
-                            'lambada': 'Zouk',
-                            'west': 'Linia',
-                            'wcs': 'Linia',
+                            'salsa': 'Cubana', 'cuban': 'Cubana', 'casino': 'Cubana', 'rueda': 'Cubana', 'mambo': 'Salsa',
+                            'kubańskie': 'Cubana', 'wprawki': 'Cubana', 
+                            'bachata': 'Bachata', 'bachat': 'Bachata', 'dominicana': 'Bachata',
+                            'kizomba': 'Kizomba', 'kiz': 'Kizomba', 'semba': 'Kizomba', 'tarraxo': 'Kizomba', 'urban': 'Kizomba',
+                            'zouk': 'Zouk', 'lambada': 'Zouk',
+                            ' west ': 'Linia', ' wcs ': 'Linia', 'modern jive': 'Linia', 
                             'cubana': 'Cubana',
                             'rumba': 'Rumba',
                             'afro': 'Afro',
                             'koncert': 'Koncert',
-                            'latino': 'Latino',
-                            'sabor': 'Latino',
-                            'reggaeton': 'Reggeton',
-                            'reggeton': 'Reggeton'
+                            'reggaeton': 'Reggeton', 'reggeton': 'Reggeton'
                         };
 
                         const checkboxes = freeSlot.querySelectorAll('input.styl');
-                        // Reset checkboxów
                         checkboxes.forEach(cb => cb.checked = false);
 
-                        // Dołączamy opis do przeszukiwania (jeśli jest)
                         const textToSearch = (titleLower + ' ' + locationLower + ' ' + (ev.description || '')).toLowerCase();
                         
                         Object.entries(styleKeywords).forEach(([key, val]) => {
@@ -457,18 +544,26 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
 
 
-                        opisInput.value = ev.title.split('\n')[1] || ev.title; // Próba wzięcia drugiej linii (często tytuł właściwy), bo pierwsza to data
-                        if (opisInput.value.length > 100) opisInput.value = opisInput.value.substring(0, 100) + '...'; // Skróć za długie
-                        
+                        opisInput.value = ''; 
                         linkInput.value = ev.url;
-                        
                         importedCount++;
                     }
                 }
             });
 
-            document.getElementById('import-fb-data').value = ''; // Wyczyść pole po udanym imporcie
+            document.getElementById('import-fb-data').value = ''; 
             alert(`Zaimportowano ${importedCount} wydarzeń!`);
+            if (typeof updateEventCounter === 'function') updateEventCounter();
+
+            // AUTO-COPY SCRAPER
+            fetch('fb_scraper.js')
+                .then(r => r.text())
+                .then(text => {
+                    navigator.clipboard.writeText(text).then(() => {
+                        console.log('Scraper skopiowany do schowka!');
+                    });
+                })
+                .catch(err => console.error('Nie udało się skopiować scrapera:', err));
 
         } catch (e) {
             console.error(e);
@@ -565,9 +660,123 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return null;
     }
+
+    function updateEventCounter() {
+        const count = document.querySelectorAll('.event-block[style*="display: block"]').length;
+        const counterEl = document.getElementById('event-counter');
+        if (counterEl) counterEl.textContent = `Liczba wgranych wydarzeń: ${count}`;
+    }
+
+    // Obsługa Enter i Auto-Paste w textarea
+    const importArea = document.getElementById('import-fb-data');
+    if (importArea) {
+        // Enter
+        importArea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                importujZFacebooka();
+            }
+        });
+
+        // Auto-import na wklejenie
+        importArea.addEventListener('input', function(e) {
+            const val = this.value.trim();
+            if (val.startsWith('[') && val.endsWith(']')) {
+                // Mały timeout żeby upewnić się że wklejanie się zakończyło
+                setTimeout(() => {
+                    importujZFacebooka();
+                }, 300);
+            }
+        });
+
+        // Auto-paste ze schowka po kliknięciu (jeśli puste)
+        importArea.addEventListener('click', async function() {
+            if (this.value.trim().length > 0) return; // Nie nadpisuj jeśli coś już jest
+
+            try {
+                const text = await navigator.clipboard.readText();
+                const trimmed = text.trim();
+                // Sprawdź czy wygląda jak nasz JSON z FB
+                if (trimmed.startsWith('[') && trimmed.endsWith(']') && trimmed.includes('rawDate')) {
+                    this.value = trimmed;
+                    // Trigger import
+                    importujZFacebooka();
+                }
+            } catch (err) {
+                // Ignorujemy błędy uprawnień (np. użytkownik zablokował dostęp do schowka)
+                console.log('Clipboard read failed or denied:', err);
+            }
+        });
+    }
+
+    // Przycisk kopiowania scrapera
+    const btnCopyScraper = document.getElementById('copy-scraper-btn');
+    if (btnCopyScraper) {
+        btnCopyScraper.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('fb_scraper.js?v=' + new Date().getTime())
+                .then(r => r.text())
+                .then(text => {
+                     navigator.clipboard.writeText(text);
+                     const originalText = btnCopyScraper.textContent;
+                     btnCopyScraper.textContent = "✅ Skopiowano!";
+                     setTimeout(() => btnCopyScraper.textContent = originalText, 1500);
+                });
+        });
+    }
+
+    updateEventCounter();
+    updateTitle(); // Inicjalizacja tytułu
 })
 
+// --- HELPERS TYTUŁOWE ---
+
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    return weekNo;
+}
+
+function updateTitle() {
+    const today = new Date();
+    if (today.getDay() === 0) {
+        today.setDate(today.getDate() + 1); // Jeśli Niedziela, liczymy dla Poniedziałku
+    }
+    
+    // Ustal datę docelową (zazwyczaj bierze się datę "następnego" początku tygodnia jeśli jesteśmy na końcu)
+    // Założenie: Generujemy post dla nadchodzącego tygodnia.
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 1); 
+    
+    const weekNum = getWeekNumber(targetDate);
+    
+    // Odmienianie "tydzień" ? Nie, "na tydzień X".
+    let weekString = weekNum.toString();
+    // Opcjonalnie słownie dla małych liczb? Nie, "tydzień 5" jest OK. 
+    // User chciał "tydzień czwarty".
+    // 1 -> pierwszy, 2 -> drugi...
+    const liczebniki = ["zerowy", "pierwszy", "drugi", "trzeci", "czwarty", "piąty", "szósty", "siódmy", "ósmy", "dziewiąty", "dziesiąty",
+                        "jedenasty", "dwunasty", "trzynasty", "czternasty", "piętnasty"];
+    
+    let numerTekst = weekNum;
+    if (weekNum < liczebniki.length) numerTekst = liczebniki[weekNum];
+
+    const title = `🎉 Zestawienie imprezowe na tydzień ${numerTekst}`;
+    
+    const titleInput = document.getElementById('post-title');
+    if (titleInput) titleInput.value = title;
+}
+
+function kopiujTytul() {
+    const titleVal = document.getElementById('post-title').value;
+    navigator.clipboard.writeText(titleVal);
+    alert('Tytuł skopiowany!');
+}
+
 function generujPost() {
+    updateTitle();
 	const blocks = document.querySelectorAll('.day-block')
 	let wynik = '🎉 Zestawienie imprezowe:\n\n'
 	let wynikAnkieta = ''
@@ -580,7 +789,17 @@ function generujPost() {
 		let dzienWiersz = ''
 
 		containers.forEach(eventBlock => {
-			const checkbox = eventBlock.previousElementSibling.querySelector('input[type=checkbox]')
+            // Checkbox: toggle-checkbox jest w labelu, który jest poprzednikiem eventBlocka?
+            // Struktura DOM:
+            // div > label(toggle) > checkbox
+            // div > eventBlock
+            // Nie. W generowaniu (linia 85): container (div) -> toggle (label) -> checkbox
+            //                                               -> eventBlock
+            // Więc eventBlock.previousElementSibling to toggle.
+            
+            const toggleLabel = eventBlock.previousElementSibling;
+			const checkbox = toggleLabel.querySelector('input[type=checkbox]')
+            
 			if (!checkbox || !checkbox.checked) return
 
 			const miasto = eventBlock.querySelector('.miasto')
@@ -591,7 +810,7 @@ function generujPost() {
 			const link = eventBlock.querySelector('.link')
 			const styleCbs = eventBlock.querySelectorAll('input.styl:checked')
 			// Promote checkbox teraz jest w headerze (toggle-checkbox sibling)
-			const promote = eventBlock.previousElementSibling.querySelector('.promowane').checked
+			const promote = toggleLabel.querySelector('.promowane').checked
 
 			const finalMiasto = miasto.value === 'Inne' ? miastoInne.value.trim() : miasto.value
 			const finalMiejsce = miejsce.value === 'Inne' ? miejsceInne.value.trim() : miejsce.value
@@ -615,8 +834,10 @@ function generujPost() {
 
 	const ankietaDiv = document.getElementById('kopiuj-ankiete') || document.createElement('div')
 	ankietaDiv.id = 'kopiuj-ankiete'
+    // Clear previous
+    ankietaDiv.innerHTML = '<h4>Kliknij, aby skopiować linię ankiety:</h4>';
 	document.body.appendChild(ankietaDiv)
-	ankietaDiv.innerHTML = '<h4>Kliknij, aby skopiować linię ankiety:</h4>'
+	// ankietaDiv.innerHTML = '<h4>Kliknij, aby skopiować linię ankiety:</h4>' // Powtórzenie
 
 	wynikAnkieta
 		.trim()
@@ -637,6 +858,8 @@ function generujPost() {
 			ankietaDiv.appendChild(div)
 		})
 }
+
+
 
 function kopiujWynik() {
 	const text = document.getElementById('wynik').value

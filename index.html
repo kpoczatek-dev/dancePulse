@@ -9,10 +9,13 @@
 
 <body>
   <h2>🕺 Generator zestawień tanecznych</h2>
+  <div id="event-counter" style="font-weight: bold; margin-bottom: 10px;">Liczba wgranych wydarzeń: 0</div>
 
-  <details style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px;">
+  <details open style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px;">
     <summary>📥 Importuj z Facebooka (Opcja Eksperymentalna)</summary>
-    <p><small>1. Wejdź na Facebooka, otwórz konsolę (F12) i wklej skrypt `fb_scraper.js`.<br>2. Wklej skopiowany JSON
+    <p><small>1. Wejdź na Facebooka, otwórz konsolę (F12) i wklej skrypt `fb_scraper.js`. <button id="copy-scraper-btn"
+          style="padding: 2px 5px; font-size: 0.8em; cursor: pointer;">📋 Kopiuj skrypt</button><br>2. Wklej skopiowany
+        JSON
         poniżej:</small></p>
     <textarea id="import-fb-data" rows="3" placeholder="Wklej tutaj JSON ze schowka..." style="width: 100%;"></textarea>
     <button id="import-btn" style="margin-top: 5px;">📥 Załaduj wydarzenia</button>
@@ -36,6 +39,12 @@
 
   <button id="generuj-btn">🚀 Generuj post i ankietę</button>
 
+  <h3>📝 Tytuł posta:</h3>
+  <div style="display: flex; gap: 5px; margin-bottom: 20px;">
+    <input id="post-title" type="text" style="flex-grow: 1; padding: 5px;" readonly>
+    <button onclick="kopiujTytul()">📋 Kopiuj tytuł</button>
+  </div>
+
   <h3>📋 Wygenerowany post:</h3>
   <textarea id="wynik" rows="10"></textarea>
   <button onclick="kopiujWynik()">📋 Kopiuj cały post</button>
@@ -43,6 +52,6 @@
   <h3>🔢 Daty do ankiety:</h3>
   <textarea id="ankieta" rows="4"></textarea>
 </body>
-<script src="script.js"></script>
+<script src="script.js?v=20260129_0530"></script>
 
 </html>
