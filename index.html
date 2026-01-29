@@ -8,7 +8,12 @@
 </head>
 
 <body>
-  <h2 style="text-align: center;">🕺 Generator zestawień tanecznych</h2>
+  <div style="position: relative; text-align: center;">
+    <h2 style="display: inline-block;">🕺 Generator zestawień tanecznych</h2>
+    <button id="help-btn"
+      style="position: absolute; right: 0; top: 0; background: var(--cuban-blue); font-size: 0.8em; padding: 8px 15px;">❓
+      Pomoc</button>
+  </div>
 
 
   <div class="app-container">
@@ -84,8 +89,84 @@
       <div id="kopiuj-ankiete-container"></div>
     </div>
 
+
+    <!-- HELP MODAL -->
+    <div id="help-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>📖 Instrukcja Obsługi</h2>
+
+        <div class="instruction-step">
+          <h3>1. Pobieranie wydarzeń z Facebooka (Pełny Automat)</h3>
+          <p>Prosta metoda skopiuj-wklej:</p>
+          <ol>
+            <li>Kliknij <strong>📋 Kopiuj Skraper</strong> (ten czerwony przycisk).</li>
+            <li>Wejdź na Facebooka (zakładka Wydarzenia).</li>
+            <li>Otwórz konsolę (F12 lub Prawy przycisk -> Zbadaj -> Konsola).</li>
+            <li>Wklej skrypt (Ctrl+V) i naciśnij Enter.</li>
+            <li>Skopiuj wynikowy tekst (CTRL+C).</li>
+          </ol>
+          <p><em>Skraper automatycznie skopiuje się ponownie do schowka po "wklejeniu" go w konsolę FB, żebyś mógł/a od
+              razu działać dalej!</em></p>
+        </div>
+
+        <div class="instruction-step">
+          <h3>2. Importowanie do Generatora</h3>
+          <p>Gdy tylko wrócisz na tę stronę (przełączysz kartę), generator <strong>automatycznie</strong> wykryje dane w
+            schowku i je załaduje.</p>
+          <p>Nie musisz nic klikać – po prostu wróć tutaj, a wydarzenia pojawią się na liście.</p>
+        </div>
+
+        <div class="instruction-step">
+          <h3>3. Wybór i Edycja</h3>
+          <ul>
+            <li>Zaznacz ☑️ checkbox przy wydarzeniu, aby dodać je do posta.</li>
+            <li>Wybierz <strong>Miasto</strong> i <strong>Miejsce</strong> (lub wpisz własne).</li>
+            <li>Zaznacz style taneczne (Salsa, Bachata itp.).</li>
+            <li>Pole <strong>Link</strong> jest wypełnione automatycznie.</li>
+            <li>Pole <strong>Krótki opis</strong> jest opcjonalne (dla Ciebie).</li>
+          </ul>
+        </div>
+
+        <div class="instruction-step">
+          <h3>4. Generowanie Posta</h3>
+          <p>Post generuje się na żywo w środkowej kolumnie. Gdy skończysz, kliknij <strong>📋 Kopiuj cały post</strong>
+            i wklej go na Facebooka!</p>
+        </div>
+
+        <div class="instruction-step">
+          <h3>5. 📬 Skrzynka Odbiorcza (CSV)</h3>
+          <p>Jeśli wydarzenia są zgłaszane przez formularz Google, pojawią się w "Skrzynce" (lewa kolumna, góra).</p>
+          <ul>
+            <li>Kliknij <strong>🔄 Sprawdź</strong>, aby pobrać najnowsze zgłoszenia.</li>
+            <li>Jeśli pojawi się nowe wydarzenie, kliknij <strong>Zatwierdź</strong>, aby przenieść je do głównej listy
+              edycji.</li>
+            <li>Przycisk <strong>🗑️ Reset Historii</strong> pozwala "zapomnieć", które zgłoszenia już zatwierdziłeś/aś.
+            </li>
+          </ul>
+        </div>
+
+        <div class="instruction-step">
+          <h3>6. 🔢 Szybka Ankieta (Prawa kolumna)</h3>
+          <p>To pomocnik do tworzenia ankiet na grupie FB. Lista w prawej kolumnie zawiera gotowe opcje (z datami).</p>
+          <ul>
+            <li>Kliknij dowolny przycisk (np. "Poniedziałek - Salsa..."), a tekst <strong>skopiuje się do
+                schowka</strong>.</li>
+            <li>Wklej go jako opcję w ankiecie na Facebooku.</li>
+          </ul>
+        </div>
+
+        <div class="tip-box"
+          style="background: #FFF9C4; padding: 10px; border-radius: 8px; border-left: 4px solid #FFC107;">
+          <strong>💡 Wskazówka:</strong> Użyj przycisku <strong>🗑️ Reset Historii</strong>, aby wyczyścić listę
+          "odhaczonych" wcześniej wydarzeń.
+        </div>
+      </div>
+    </div>
+
   </div>
 </body>
+
 <script src="script.js?v=20260129_0625"></script>
 
 </html>

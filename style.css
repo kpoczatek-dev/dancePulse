@@ -289,3 +289,12 @@ button:active {
     .col-left, .col-middle, .col-right { width: 100%; flex: none; }
     .sticky-col { position: static; max-height: none; }
 }
+
+.clicked-poll {
+    background: #DCEDC8 !important; /* Light Green */
+    color: #33691E !important; /* Dark Green */
+    border-color: #AED581 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 1;
+}

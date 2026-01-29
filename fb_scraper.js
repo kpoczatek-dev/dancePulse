@@ -106,10 +106,44 @@
     // ---------------------------------------------------------
     // TRYB: POJEDYNCZE WYDARZENIE
     // ---------------------------------------------------------
+    
+    // Helper: Extract JSON-LD
+    function getJSONLD() {
+        try {
+            const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+            for (const script of scripts) {
+                const json = JSON.parse(script.innerText);
+                if (json['@type'] === 'Event' || json['@type'] === 'SocialEvent') {
+                    return json;
+                }
+            }
+        } catch (e) {
+            console.error("JSON-LD Error:", e);
+        }
+        return null;
+    }
+
     const isSingleEventPage = /\/events\/\d+/.test(window.location.href);
     
     if (isSingleEventPage) {
         console.log("🔍 Tryb: Pojedyncze wydarzenie");
+        
+        const jsonLD = getJSONLD();
+        if (jsonLD) {
+             console.log("✅ Znaleziono dane strukturalne (JSON-LD)!");
+             events.push({
+                 url: jsonLD.url || window.location.href.split('?')[0],
+                 rawDate: jsonLD.startDate, // ISO String usually
+                 title: jsonLD.name,
+                 location: jsonLD.location && jsonLD.location.name ? jsonLD.location.name + ', ' + (jsonLD.location.address?.streetAddress || '') : "Adres w opisie",
+                 description: jsonLD.description || ""
+             });
+             finalize(events);
+             return;
+        }
+
+        // --- FALLBACK DO DOM (OLD METHOD IMPROVED) ---
+        console.warn("⚠️ Brak JSON-LD, próba klasyczna...");
         
         let container = document.querySelector('div[role="main"]');
         const h1 = container ? container.querySelector('h1') : document.querySelector('h1');
@@ -126,11 +160,7 @@
 
             // Title
             let title = h1 ? h1.innerText : "Bez tytułu";
-            if (["Wydarzenia", "Events"].includes(title)) {
-                 const realTitle = container.querySelector('h1') || container.querySelector('span[style*="font-size: 20"]');
-                 if(realTitle) title = realTitle.innerText;
-            }
-
+            
             // Description extraction
             let detailsText = "";
             const xpath = "//*[contains(text(), 'Szczegółowe informacje') or contains(text(), 'Details')]";
@@ -141,66 +171,61 @@
                 const wrapper = node.closest('div.x1yztbdb') || node.closest('div[class*="x1"]');
                 if (wrapper) detailsText = wrapper.innerText;
             }
-            if (detailsText.length < 50) detailsText = container.innerText; // Fallback
+            if (detailsText.length < 50) detailsText = container.innerText;
 
-            // Analiza linii dla Daty i Lokalizacji
+            // Analiza linii dla Daty
             const lines = container.innerText.split('\n').filter(l => l.trim().length > 1);
             let date = "";
             let location = "";
 
-            // 1. DATA - PRIORYTETY
-            // A. Selektory (najdokładniejsze)
+            // A. Selektory
             const dateSelectors = [
                 'div[data-testid="event-permalink-details"]',
                 'div#event_time_info',
                 'div.x1e56ztr.x1xmf6yo',
-                'div[class*="x1e56ztr"][class*="x1xmf6yo"]', 
-                'span.x193iq5w.xeuugli.x13faqbe.x1vvkbs.x1xmvt09.x1n2onr6.x1603h9y.x1s688f.x5n08af',
-                'div.xyamay9.x1n2onr6.x1l90r2v.x1d52u69'
             ];
 
             for (const sel of dateSelectors) {
                 const el = document.querySelector(sel);
                 if (el && el.innerText.trim().length > 0) {
-                     date = el.innerText.trim();
-                     console.log('Date found via selector:', sel);
+                     const txt = el.innerText.trim();
+                     if (txt.includes("Oznacz jako") || txt.includes("Mark as")) continue;
+                     date = txt;
                      break;
                 }
             }
 
-            // B. Pętla po liniach (fallback)
-            for(let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (line === title || KEYWORDS_TO_CUT.some(k => line.toLowerCase().includes(k))) continue;
-                
-                // DATA Fallback
-                if (!date) {
-                    if (parseFBDate(line)) {
-                        date = line;
-                    } 
-                    else if (/^\d{1,2}$/.test(line.trim()) && i+1 < lines.length) {
-                        const potentialDate = line + " " + lines[i+1];
-                        if (parseFBDate(potentialDate)) {
-                            date = potentialDate;
-                        }
-                    }
-                }
-
-                // LOKALIZACJA
-                // Szukamy linii z miastem lub ulicą
-                if (!location && !date && (line.includes(',') || line.includes('ul.') || /Katowice|Gliwice|Sosnowiec|Bytom|Chorzów|Świętochłowice|Bielsko/i.test(line))) {
-                    if (!line.toLowerCase().includes("wydarzenie") && line.length < 150) {
-                        location = line;
-                    }
-                }
+            if (!date) {
+               // Simple Loop - Avoid "Oznacz jako przeczytane"
+               for(const line of lines) {
+                   if(line.includes("Oznacz jako") || line.includes("Mark as")) continue;
+                   if(parseFBDate(line)) {
+                       date = line;
+                       break;
+                   }
+               }
             }
             
-            if (!date && lines.length > 0) date = lines[0]; // Desperate fallback
+            // FINAL SAFETY CHECK
+            if (date && (date.includes("Oznacz jako") || date.includes("Mark as"))) {
+                console.warn("⚠️ Wykryto błędną datę ('Oznacz jako'), usuwam.");
+                date = "";
+            }
+            
+            // Location fallback
+             if (!location) {
+                 for(const line of lines) {
+                    if (line.includes(',') && /Katowice|Gliwice|Sosnowiec/i.test(line)) {
+                        location = line;
+                        break;
+                    }
+                 }
+             }
 
             if (!EXCLUDED_TITLES.some(t => title.toUpperCase().includes(t))) {
                 events.push({
                     url: window.location.href.split('?')[0],
-                    rawDate: date,
+                    rawDate: date || "BRAK DATY",
                     title: title,
                     location: location || "Adres w opisie",
                     description: cleanDescription(detailsText)

@@ -387,14 +387,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnCopyScraper = document.getElementById('copy-scraper-btn');
     if(btnCopyScraper) {
         btnCopyScraper.addEventListener('click', () => {
-             if (window.scraperScriptCache) {
-                navigator.clipboard.writeText(window.scraperScriptCache).then(() => alert('Skrypt skopiowany!'));
-            } else {
-                fetch('fb_scraper.js').then(r=>r.text()).then(t => {
-                    window.scraperScriptCache = t;
-                    navigator.clipboard.writeText(t).then(() => alert('Skrypt skopiowany!'));
-                });
-            }
+             // ALWAYS FETCH NEW to avoid stale cache issues when I update the file
+             // window.scraperScriptCache check REMOVED
+             fetch('fb_scraper.js?v=' + new Date().getTime()).then(r=>r.text()).then(t => {
+                 window.scraperScriptCache = t; 
+                 navigator.clipboard.writeText(t).then(() => alert('Nowy skrypt (JSON-LD) skopiowany!'));
+             });
         });
     }
 
@@ -563,39 +561,58 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('focus', () => {
          // Small delay to ensure focus is active
         setTimeout(() => {
-             importujZFacebooka(true); // true = silent mode
+             importujZFacebooka(); // Loud mode!
         }, 500);
     });
+
+    let lastClipboardContent = '';
 
     async function importujZFacebooka(silent = false) {
         let jsonText;
         try {
             jsonText = await navigator.clipboard.readText();
         } catch (err) {
-            if(!silent) alert('Nie udało się odczytać schowka! Upewnij się, że udzieliłeś uprawnień.');
             console.error(err);
+            // Alert user because they likely expected an import (auto or manual)
+            // But only if we are in a context where they might care?
+            // Actually, for auto-import, alerting on EVERY focus error might be too much if browser blocks it.
+            // Let's try to be helpful:
+            // alert('Nie udało się odczytać schowka. Kliknij na stronę, aby aktywować uprawnienia.');
+            // But this will loop if focus triggers it. 
+            // Compromise: Console error + maybe status bar? 
+            // User ASKED for alerts.
+            if (!silent) alert('Błąd odczytu schowka! (Może wymagane kliknięcie w stronę?)'); 
             return;
         }
 
         if (!jsonText || !jsonText.trim()) {
-            if(!silent) alert('Schowek jest pusty lub nie zawiera tekstu!');
             return;
         }
+
+        // Loop Protection REMOVED per user request ("nothing happens")
+        // if (jsonText === lastClipboardContent) { return; }
+        // lastClipboardContent = jsonText;
         
-        // Quick check before parsing to avoid unnecessary work/errors in console on auto-focus
         const trimmed = jsonText.trim();
-        if (!trimmed.startsWith('[') || !trimmed.endsWith(']') || !trimmed.includes('rawDate')) {
-            if(!silent) alert('To nie wygląda na poprawny JSON z wydarzeniami (brak [ ] lub rawDate).');
+        
+        // SMART CHECK:
+        if (!trimmed.startsWith('[')) {
+            return;
+        }
+
+        if (!trimmed.endsWith(']') || !trimmed.includes('rawDate')) {
+            alert('Wykryto dane w schowku, ale to nie wygląda na poprawny format wydarzeń (brak "rawDate" lub "]").');
             return;
         }
 
         try {
             const events = JSON.parse(jsonText);
             let importedCount = 0;
+            let skippedReasons = []; // To report why
+            
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Import Range: 14 Days
             let maxDate = new Date(today);
             maxDate.setDate(today.getDate() + 14);
             maxDate.setHours(23, 59, 59, 999);
@@ -605,11 +622,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return url.match(/\d{8,}/g) || [];
             };
 
-            // Deduplicate Input
-            const uniqueEvents = [];
             const processedUrls = new Set();
+            const uniqueEvents = [];
             
-            // Validate if it is array
             if (!Array.isArray(events)) {
                 throw new Error("To nie jest poprawny format JSON z wydarzeniami.");
             }
@@ -622,8 +637,8 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             uniqueEvents.forEach(ev => {
-                // Check candidates
                 const candidates = [];
+                // Prioritize rawDate as it might be ISO now
                 const sources = [ev.rawDate, ev.description, ev.title];
                 
                 sources.forEach(src => {
@@ -631,28 +646,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (d) candidates.push(d);
                 });
 
-                // Filter valid future dates (>= Today - 1 day flexibility or strictly Today)
-                // Let's use strict Today.
                 const validCandidates = candidates.filter(d => d >= today);
-                
-                // Sort: Earliest first
                 validCandidates.sort((a, b) => a - b);
 
                 if (validCandidates.length === 0) {
-                     // console.log(`Skipping ${ev.title}: No valid future date.`);
+                     skippedReasons.push(`"${ev.title}": Nie rozpoznano daty (Tekst: "${ev.rawDate || 'brak'}")`);
                      return; 
                 }
 
                 const parsedDate = validCandidates[0];
 
                 if (parsedDate > maxDate) {
-                    // console.log(`Skipping ${ev.title}: Date ${parsedDate.toLocaleDateString()} beyond limit.`);
+                    skippedReasons.push(`"${ev.title}": Data poza zakresem 14 dni (${formatujDatePL(parsedDate)})`);
                     return;
                 }
 
-                // Find Day Block
-                // We compare Year, Month, Date.
-                const dayBlock = Array.from(document.querySelectorAll('.day-block')).find(block => {
+                // ... Logic continues for insertion ...
+                // Replicating insertion logic briefly to maintain context (Assuming previous steps logic was robust enough, just wrapping skippedReasons)
+                // Actually, I need to keep the file content intact. I am replacing the BLOCK.
+                // I need to be careful not to delete the insertion logic.
+                // Wait, replacing a huge block is risky.
+                // Let's rely on view_file to confirm where insertion logic starts.
+                // Insertion logic starts at line 653 ("Find Day Block").
+                
+                 const dayBlock = Array.from(document.querySelectorAll('.day-block')).find(block => {
                     const d = new Date(block.dataset.date);
                     return d.getDate() === parsedDate.getDate() && 
                            d.getMonth() === parsedDate.getMonth() &&
@@ -660,27 +677,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 if (dayBlock) {
-                    // Check for existing event in this block
                     const newIds = getIds(ev.url);
-                    
                     const alreadyExists = Array.from(dayBlock.querySelectorAll('.event-block')).some(eb => {
                         const linkVal = eb.querySelector('.link').value || '';
                         if (!linkVal) return false;
-                        
-                        // Compare URLs directly
                         if (linkVal === ev.url) return true;
-                        
-                        // Compare IDs found in URL
                         const existingIds = getIds(linkVal);
-                        if (newIds.length > 0 && existingIds.length > 0) {
-                            return newIds.some(id => existingIds.includes(id));
-                        }
+                        if (newIds.length > 0 && existingIds.length > 0) return newIds.some(id => existingIds.includes(id));
                         return false;
                     });
 
-                    if (alreadyExists) return;
+                    if (alreadyExists) {
+                         // already exists, silent skip?
+                         return;
+                    }
 
-                    // Fill First Empty Slot
                     const emptySlot = Array.from(dayBlock.querySelectorAll('.event-block')).find(eb => {
                         return eb.style.display === 'none' && (!eb.querySelector('.link').value);
                     });
@@ -689,75 +700,43 @@ document.addEventListener('DOMContentLoaded', function () {
                         const container = emptySlot.parentElement;
                         const eventBlock = emptySlot;
                         
-                        // Activate
                         container.querySelector('.toggle-checkbox').checked = true;
                         eventBlock.style.display = 'block';
-                        
-                        // --- FILL DATA ---
                         eventBlock.querySelector('.link').value = ev.url;
                         
-                        // Clean title - NOT FILLING DESCRIPTION as per user request
-                        // let cleanTitle = (ev.title || '').replace(/^\d{1,2}[\.\-]\d{1,2}\s+/, ''); 
-                        // eventBlock.querySelector('.opis').value = cleanTitle;
-
-                        // Location Mapping (Simplified)
                         const miastoSelect = eventBlock.querySelector('.miasto');
                         const miejsceSelect = eventBlock.querySelector('.miejsce');
                         const miastoInne = eventBlock.querySelector('.miasto-inne');
-                        const miejsceInne = eventBlock.querySelector('.miejsce-inne');
                         
-                        // Basic heuristic: Just put in "Inne" if provided, user can correct. 
-                        // Or if user wants advanced matching (which was in previous code), we can preserve it.
-                        // I will keep it simple for now to avoid specific "miejscaWgMiasta" dependency errors if that const is not available here.
-                        // But wait, user wanted "Refactor", not "Remove features".
-                        // Accessing "adresyMap", "miejscaWgMiasta" etc needs them to be in scope. 
-                        // They are defined at top level, so it's OK. 
-                        
-                        // Let's implement a robust but simple matcher.
-                        let bestCity = 'Katowice'; // Default? Or 'Inne'?
+                        let bestCity = 'Katowice'; 
                         let bestPlace = null;
                         
                         const fullText = ((ev.location||'') + ' ' + (ev.title||'') + ' ' + (ev.description||'')).toLowerCase();
                         
-                        // 1. Try Address Map
                         for (const [addr, place] of Object.entries(adresyMap || {})) {
-                             if (fullText.includes(addr)) {
-                                 bestPlace = place;
-                                 break;
-                             }
+                             if (fullText.includes(addr)) { bestPlace = place; break; }
                         }
                         
-                        // 2. Try City Names
                         if (!bestPlace) {
-                             // Try to find city in text
                              for (const city of Object.keys(miejscaWgMiasta || {})) {
                                  if (fullText.includes(city.toLowerCase())) {
                                      bestCity = city; 
-                                     // Try to find place in that city
                                      const places = miejscaWgMiasta[city];
                                      for (const p of places) {
-                                         if (fullText.includes(p.toLowerCase())) {
-                                             bestPlace = p;
-                                             break;
-                                         }
+                                         if (fullText.includes(p.toLowerCase())) { bestPlace = p; break; }
                                      }
-                                     break; // Found city, stop
+                                     break; 
                                  }
                              }
                         } else {
-                            // If we have a place, find its city
                             for (const [city, places] of Object.entries(miejscaWgMiasta || {})) {
-                                if (places.includes(bestPlace)) {
-                                    bestCity = city;
-                                    break;
-                                }
+                                if (places.includes(bestPlace)) { bestCity = city; break; }
                             }
                         }
                         
-                        // Apply
                         if (bestPlace) {
                             miastoSelect.value = bestCity;
-                            miastoSelect.dispatchEvent(new Event('change')); // Trigger update of places
+                            miastoSelect.dispatchEvent(new Event('change')); 
                             miejsceSelect.value = bestPlace;
                         } else {
                             if (ev.location) {
@@ -765,15 +744,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 miastoSelect.dispatchEvent(new Event('change'));
                                 miastoInne.value = ev.location;
                             } else {
-                                // Default default
                                 miastoSelect.value = 'Katowice';
                                 miastoSelect.dispatchEvent(new Event('change'));
                             }
                         }
 
-                        // Styles Mapping
                         const checkboxes = eventBlock.querySelectorAll('input.styl');
-                        checkboxes.forEach(cb => cb.checked = false); // Reset
+                        checkboxes.forEach(cb => cb.checked = false); 
                         
                         Object.entries(styleKeywords || {}).forEach(([key, val]) => {
                             if (fullText.includes(key)) {
@@ -781,7 +758,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 if (cb) cb.checked = true;
                             }
                         });
-
 
                         importedCount++;
                     }
@@ -793,17 +769,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 zapiszStan();
                 generujPost();
                 
-                // Auto-Restore Scraper
                 if (window.scraperScriptCache) {
                     navigator.clipboard.writeText(window.scraperScriptCache);
                 } else {
                     fetch('fb_scraper.js').then(r=>r.text()).then(t=>navigator.clipboard.writeText(t));
                 }
-                
-
 
             } else {
-                alert('Brak nowych wydarzeń w zakresie 14 dni.');
+                let msg = 'Nie zaimportowano żadnych wydarzeń.';
+                if (skippedReasons.length > 0) {
+                    msg += '\n\nOto powody:\n' + skippedReasons.slice(0, 5).join('\n');
+                    if(skippedReasons.length > 5) msg += `\n...i ${skippedReasons.length - 5} więcej.`;
+                    msg += '\n\nUpewnij się, że używasz NOWEGO skrapera (JSON-LD), który poprawnie czyta daty!';
+                } else {
+                    msg += '\n(Być może są już na liście lub są poza zakresem 14 dni)';
+                }
+                alert(msg);
             }
 
         } catch (e) {
@@ -817,6 +798,11 @@ document.addEventListener('DOMContentLoaded', function () {
         text = text.toUpperCase();
         const now = new Date();
         const currentYear = now.getFullYear();
+
+        // -1. ISO Date (from JSON-LD)
+        if (text.match(/^\d{4}-\d{2}-\d{2}/)) {
+            return new Date(text);
+        }
 
         // 0. Relative dates
         if (text.includes('DZISIAJ')) return now;
@@ -934,6 +920,35 @@ document.addEventListener('DOMContentLoaded', function () {
     // ... logic removed ...
 
 
+
+    // --- HELP MODAL ---
+    const modal = document.getElementById('help-modal');
+    const btnHelp = document.getElementById('help-btn');
+    const spanClose = document.getElementsByClassName("close-modal")[0];
+
+    if (btnHelp && modal) {
+        btnHelp.onclick = function() {
+            if (modal.style.display === "block") {
+                modal.style.display = "none";
+            } else {
+                modal.style.display = "block";
+            }
+        }
+    }
+
+    if (spanClose && modal) {
+        spanClose.onclick = function() {
+            modal.style.display = "none";
+        }
+    }
+
+    if (modal) {
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
+    }
 
     updateEventCounter();
     updateTitle(); // Inicjalizacja tytułu
@@ -1261,10 +1276,16 @@ function generujPost() {
 			div.style.marginBottom = '5px'
 			const btn = document.createElement('button')
 			btn.textContent = '📋 ' + l
+
 			btn.onclick = () => {
 				navigator.clipboard.writeText(l)
 				btn.textContent = '✅ Skopiowano!'
-				setTimeout(() => (btn.textContent = '📋 ' + l), 1000)
+                
+                btn.classList.add('clicked-poll');
+
+				setTimeout(() => {
+                     btn.textContent = '✅ ' + l 
+                }, 1000)
 			}
 			div.appendChild(btn)
 			ankietaDiv.appendChild(div)
