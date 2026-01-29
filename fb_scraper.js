@@ -148,31 +148,53 @@
             let date = "";
             let location = "";
 
+            // 1. DATA - PRIORYTETY
+            // A. Selektory (najdokładniejsze)
+            const dateSelectors = [
+                'div[data-testid="event-permalink-details"]',
+                'div#event_time_info',
+                'div.x1e56ztr.x1xmf6yo',
+                'div[class*="x1e56ztr"][class*="x1xmf6yo"]', 
+                'span.x193iq5w.xeuugli.x13faqbe.x1vvkbs.x1xmvt09.x1n2onr6.x1603h9y.x1s688f.x5n08af',
+                'div.xyamay9.x1n2onr6.x1l90r2v.x1d52u69'
+            ];
+
+            for (const sel of dateSelectors) {
+                const el = document.querySelector(sel);
+                if (el && el.innerText.trim().length > 0) {
+                     date = el.innerText.trim();
+                     console.log('Date found via selector:', sel);
+                     break;
+                }
+            }
+
+            // B. Pętla po liniach (fallback)
             for(let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 if (line === title || KEYWORDS_TO_CUT.some(k => line.toLowerCase().includes(k))) continue;
                 
-                // Data
+                // DATA Fallback
                 if (!date) {
                     if (parseFBDate(line)) {
                         date = line;
-                        continue;
                     } 
                     else if (/^\d{1,2}$/.test(line.trim()) && i+1 < lines.length) {
                         const potentialDate = line + " " + lines[i+1];
                         if (parseFBDate(potentialDate)) {
                             date = potentialDate;
-                            i++;
-                            continue;
                         }
                     }
                 }
 
-                // Lokalizacja
+                // LOKALIZACJA
+                // Szukamy linii z miastem lub ulicą
                 if (!location && !date && (line.includes(',') || line.includes('ul.') || /Katowice|Gliwice|Sosnowiec|Bytom|Chorzów|Świętochłowice|Bielsko/i.test(line))) {
-                    if (!line.toLowerCase().includes("wydarzenie") && line.length < 150) location = line;
+                    if (!line.toLowerCase().includes("wydarzenie") && line.length < 150) {
+                        location = line;
+                    }
                 }
             }
+            
             if (!date && lines.length > 0) date = lines[0]; // Desperate fallback
 
             if (!EXCLUDED_TITLES.some(t => title.toUpperCase().includes(t))) {

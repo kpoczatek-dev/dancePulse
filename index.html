@@ -8,58 +8,83 @@
 </head>
 
 <body>
-  <h2>🕺 Generator zestawień tanecznych</h2>
-  <div id="event-counter" style="font-weight: bold; margin-bottom: 10px;">Liczba wgranych wydarzeń: 0</div>
+  <h2 style="text-align: center;">🕺 Generator zestawień tanecznych</h2>
 
-  <details open style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px;">
-    <summary>📥 Importuj z Facebooka (Opcja Eksperymentalna)</summary>
-    <p><small>1. Wejdź na Facebooka, otwórz konsolę (F12) i wklej skrypt `fb_scraper.js`. <button id="copy-scraper-btn"
-          style="padding: 2px 5px; font-size: 0.8em; cursor: pointer;">📋 Kopiuj skrypt</button><br>2. Wklej skopiowany
-        JSON
-        poniżej:</small></p>
-    <textarea id="import-fb-data" rows="3" placeholder="Wklej tutaj JSON ze schowka..." style="width: 100%;"></textarea>
-    <button id="import-btn" style="margin-top: 5px;">📥 Załaduj wydarzenia</button>
-  </details>
 
-  <div class="filters" style="background: #e3f2fd; border-color: #2196f3;">
-    <h3>📬 Skrzynka Odbiorcza (Zgłoszenia)</h3>
-    <input type="text" id="google-sheet-url"
-      placeholder="Wklej link CSV z Arkusza Google (Plik -> Udostępnij -> Opublikuj w internecie -> CSV)"
-      style="width: 100%; font-size: 0.8em;">
-    <button id="check-inbox-btn" style="background: #2196f3;">🔄 Sprawdź nowe zgłoszenia</button>
-    <div id="inbox-container" style="margin-top: 15px;"></div>
+  <div class="app-container">
+
+    <!-- LEFT COLUMN: Inputs & Forms -->
+    <div class="col-left">
+      <div class="filters" style="background: #e3f2fd; border-color: #2196f3; padding: 10px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="margin: 0; font-size: 1em;">📬 Skrzynka (CSV)</h3>
+          <button id="check-inbox-btn"
+            style="background: #2196f3; color: white; border: none; padding: 5px 10px; font-size: 0.9em; cursor: pointer;">🔄
+            Sprawdź</button>
+        </div>
+        <div id="inbox-container"></div>
+      </div>
+
+      <div class="filters" style="margin-bottom: 20px;">
+        <label for="filter-select">Widok:</label>
+        <select id="filter-select">
+          <option value="thisweek">Ten tydzień</option>
+          <option value="all">Wszystkie 14 dni</option>
+          <option value="weekend">Najbliższe dni</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+        <button id="reset-history-btn"
+          onclick="if(confirm('Na pewno wyczyścić historię zatwierdzonych zgłoszeń?')) { localStorage.removeItem('party_inbox_done'); location.reload(); }"
+          style="flex: 1; background: #e0e0e0; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc;">
+          🗑️ Reset Historii
+        </button>
+        <button
+          onclick="if(confirm('Na pewno wyczyścić cały formularz?')) { localStorage.removeItem('party_generator_stan'); location.reload(); }"
+          style="flex: 1; background: #e0e0e0; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc;">
+          🧹 Wyczyść Formularz
+        </button>
+        <button id="copy-scraper-btn"
+          style="flex: 1; background: #ffcc80; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
+          📋 Kopiuj Skraper
+        </button>
+      </div>
+
+      <div id="form"></div>
+    </div>
+
+    <!-- MIDDLE COLUMN: Post Content (Sticky) -->
+    <div class="col-middle sticky-col">
+      <h3>📝 Tytuł posta:</h3>
+      <div style="display: flex; gap: 5px; margin-bottom: 20px;">
+        <input id="post-title" type="text" style="flex-grow: 1; padding: 5px;" readonly>
+        <button onclick="kopiujTytul()">📋 Kopiuj tytuł</button>
+      </div>
+
+      <h3>📋 Wygenerowany post:</h3>
+      <textarea id="wynik" rows="25"
+        style="width: 100%; font-family: monospace; font-size: 0.9em; white-space: pre-wrap; margin-bottom: 5px;"></textarea>
+
+      <div id="event-counter"
+        style="font-weight: bold; margin-bottom: 10px; text-align: right; color: #d32f2f; font-size: 0.9em;">Liczba
+        wgranych wydarzeń: 0</div>
+
+      <div style="margin-bottom: 10px; margin-top: 10px;">
+        <label>Hashtagi (doklejają się na końcu):</label><br>
+        <input id="hashtagi" style="width: 100%;" value="#Salsa #Bachata #Kizomba #Taniec #Silesia">
+      </div>
+
+      <button onclick="kopiujWynik()" style="width: 100%; margin-bottom: 20px;">📋 Kopiuj cały post</button>
+    </div>
+
+    <!-- RIGHT COLUMN: Poll Buttons (Sticky) -->
+    <div class="col-right sticky-col">
+      <h3 style="font-size: 1em; margin-bottom: 10px;">🔢 Kliknij, aby skopiować linię ankiety:</h3>
+      <div id="kopiuj-ankiete-container"></div>
+    </div>
+
   </div>
-
-  <div class="filters">
-    <label for="filter-select">Widok:</label>
-    <select id="filter-select">
-      <option value="thisweek">Ten tydzień</option>
-      <option value="all">Wszystkie 14 dni</option>
-      <option value="weekend">Najbliższe dni</option>
-    </select>
-  </div>
-
-  <div id="form"></div>
-
-  <div style="margin-top: 20px;">
-    <label>Hashtagi:</label><br>
-    <input id="hashtagi" style="width: 100%;" value="#Salsa #Bachata #Kizomba #Taniec #Silesia">
-  </div>
-
-  <button id="generuj-btn">🚀 Generuj post i ankietę</button>
-
-  <h3>📝 Tytuł posta:</h3>
-  <div style="display: flex; gap: 5px; margin-bottom: 20px;">
-    <input id="post-title" type="text" style="flex-grow: 1; padding: 5px;" readonly>
-    <button onclick="kopiujTytul()">📋 Kopiuj tytuł</button>
-  </div>
-
-  <h3>📋 Wygenerowany post:</h3>
-  <textarea id="wynik" rows="10"></textarea>
-  <button onclick="kopiujWynik()">📋 Kopiuj cały post</button>
-
-  <h3>🔢 Daty do ankiety:</h3>
-  <textarea id="ankieta" rows="4"></textarea>
 </body>
 <script src="script.js?v=20260129_0625"></script>
 
