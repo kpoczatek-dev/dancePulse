@@ -28,12 +28,13 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	const style = [
-		'Salsa',
+		'Cubana', // First!
 		'Bachata',
 		'Kizomba',
+        // Secondary
+		'Salsa',
 		'Zouk',
 		'Linia',
-		'Cubana',
 		'Rumba',
 		'Afro',
 		'Koncert',
@@ -238,9 +239,63 @@ document.addEventListener('DOMContentLoaded', function () {
             
 			const styleBox = document.createElement('div')
 			styleBox.className = 'checkboxes'
-			styleBox.innerHTML = style
+            
+            const primaryStyles = style.slice(0, 3);
+            const secondaryStyles = style.slice(3);
+            
+            const primaryHtml = primaryStyles
 				.map(s => `<label><input type="checkbox" class="styl" value="${s}"> ${s}</label>`)
-				.join('')
+				.join('');
+            
+            styleBox.innerHTML = primaryHtml;
+
+            if (secondaryStyles.length > 0) {
+                const details = document.createElement('details');
+                details.style.display = 'inline-block';
+                details.style.verticalAlign = 'middle';
+                details.style.marginLeft = '10px'; 
+                details.style.position = 'relative'; // Anchor for absolute content
+
+                const summary = document.createElement('summary');
+                summary.textContent = '▼'; // Just arrow
+                summary.style.cursor = 'pointer';
+                summary.style.fontSize = '1.2em'; // slightly larger
+                summary.style.userSelect = 'none';
+                summary.style.listStyle = 'none'; // Hide default marker
+                summary.style.color = 'black'; // Explicit black
+                
+                // Webkit fix
+                const styleEl = document.createElement('style');
+                styleEl.textContent = 'summary::-webkit-details-marker { display: none; }';
+                document.head.appendChild(styleEl);
+                
+                details.appendChild(summary);
+                
+                const secondaryContainer = document.createElement('div');
+                secondaryContainer.style.marginTop = '5px';
+                secondaryContainer.style.display = 'flex';
+                secondaryContainer.style.flexWrap = 'wrap';
+                secondaryContainer.style.gap = '10px';
+                
+                // Floating dropdown style
+                secondaryContainer.style.position = 'absolute';
+                secondaryContainer.style.top = '100%';
+                secondaryContainer.style.left = '0';
+                secondaryContainer.style.zIndex = '100';
+                secondaryContainer.style.background = 'white';
+                secondaryContainer.style.border = '1px solid #ccc';
+                secondaryContainer.style.padding = '10px';
+                secondaryContainer.style.borderRadius = '5px';
+                secondaryContainer.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+                secondaryContainer.style.minWidth = '200px';
+
+                secondaryContainer.innerHTML = secondaryStyles
+                    .map(s => `<label><input type="checkbox" class="styl" value="${s}"> ${s}</label>`)
+                    .join('');
+                
+                details.appendChild(secondaryContainer);
+                styleBox.appendChild(details);
+            }
 
 			function updateMiejscaOptions(miasto) {
 				if (miasto === 'Inne') {
@@ -303,36 +358,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		if (value === 'thisweek') {
 			const today = new Date()
-			const currentDayOfWeek = today.getDay()
+            today.setHours(0,0,0,0);
+            
+            // Calculate upcoming Sunday
+            const dayOfWeek = today.getDay(); // 0-Sun, ... 6-Sat
+            const daysUntilSunday = (7 - dayOfWeek) % 7; 
+            
+            const thisSunday = new Date(today);
+            thisSunday.setDate(today.getDate() + daysUntilSunday);
+            thisSunday.setHours(23,59,59,999);
 
-			blocks.forEach((block, index) => {
-				const blockDay = parseInt(block.dataset.dzienTygIndex)
-				const blockDate = new Date(block.dataset.date)
-
-				// Oblicz, ile dni pozostało do najbliższego czwartku
-				let daysUntilThursday
-				if (currentDayOfWeek <= 4) {
-					daysUntilThursday = 4 - currentDayOfWeek
-				} else {
-					daysUntilThursday = 4 + (7 - currentDayOfWeek)
-				}
-
-				const nextThursday = new Date(today)
-				nextThursday.setDate(today.getDate() + daysUntilThursday + 1)
-				nextThursday.setHours(0, 0, 0, 0)
-
-				const nextSunday = new Date(nextThursday)
-				nextSunday.setDate(nextThursday.getDate() + 3)
-
-				const blockDateNormalized = new Date(blockDate)
-				blockDateNormalized.setHours(0, 0, 0, 0)
-
-				const show = blockDateNormalized >= nextThursday && blockDateNormalized <= nextSunday
-				
-				// Ukryj poniedziałek (dzienTygIndex == 1)
-				const isMonday = block.dataset.dzienTygIndex == '1';
-				
-				block.style.display = (show && !isMonday) ? 'block' : 'none'
+			blocks.forEach((block) => {
+				const blockDate = new Date(block.dataset.date);
+                // Show if it falls within this week (up to Sunday)
+				block.style.display = (blockDate <= thisSunday) ? 'block' : 'none'
 			})
 			return
 		}
@@ -1234,7 +1273,7 @@ function generujPost() {
 			dzienWiersz += `${prefix}${finalMiasto}: ${finalMiejsce} (${styleTekst})${
 				opis.value.trim() ? ` – ${opis.value.trim()}` : ''
 			}\n`
-			if (link.value.trim()) dzienWiersz += `${link.value.trim()}\n`
+			if (link.value.trim()) dzienWiersz += `🔗 ${link.value.trim()}\n`
 
 			wynikAnkieta += `${dzienTekst}: ${finalMiasto} - ${finalMiejsce} (${styleTekst})\n`
 		})
@@ -1242,8 +1281,9 @@ function generujPost() {
 		if (dzienWiersz) wynik += `🗓️ ${dzienTekst}:\n${dzienWiersz}\n`
 	})
 
-	wynik += 'Do zobaczenia! 💃🕺\n@wszyscy\n\n'
-    wynik += 'PS: Chcesz zgłosić imprezę taneczną, która odbędzie się w najbliższym czasie? Nic prostszego! Wystarczy, że wypełnisz ten formularz. Dzięki Twojej pomocy nie przegapimy żadnej okazji do tańca! ❤️\nhttps://tiny.pl/2bc8z7649\n\n'
+	wynik += '@wszyscy Do zobaczenia na parkiecie! 💃🕺\n\n'
+    wynik += '📝 PS1: Chcesz zgłosić imprezę? Wypełnij krótki formularz, a dodamy ją do następnego zestawienia: 👉 https://tiny.pl/2bc8z7649\n\n'
+    wynik += '☕️ PS2: Podoba Ci się to, co robię? Jeśli chcesz, możesz postawić mi wirtualną kawę – to daje mi mega kopa do dalszego działania dla Was! 👉 www.buycoffee.to/katosalsahub\n\n'
     wynik += document.getElementById('hashtagi').value
 	document.getElementById('wynik').value = wynik
 	document.getElementById('wynik').value = wynik
@@ -1299,3 +1339,90 @@ function kopiujWynik() {
 	navigator.clipboard.writeText(text)
 	alert('Skopiowano cały post!')
 }
+
+// --- WEATHER WIDGET ---
+function initWeather() {
+    const container = document.getElementById('weather-widget');
+    if (!container) return;
+
+    // Katowice Coords
+    const LAT = 50.2649;
+    const LON = 19.0238;
+
+    // Calculate dates: Next Friday, Saturday, Sunday
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0-Sun, 1-Mon...
+    
+    // Logic: Find upcoming Friday.
+    // If today is Monday(1) -> Friday is +4 days.
+    // If today is Friday(5) -> +0 days.
+    // If today is Saturday(6) -> +6 days (Next Friday).
+    // If today is Sunday(0) -> +5 days.
+    
+    let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+    // Special case: If today is Saturday(6), simple math gives 6. Correct.
+    // If today is Sunday(0), simple math gives 5. Correct.
+    
+    const nextFriday = new Date(today);
+    nextFriday.setDate(today.getDate() + daysUntilFriday);
+    
+    // We need 3 days: Fri, Sat, Sun
+    const dates = [];
+    for(let i=0; i<3; i++) {
+        const d = new Date(nextFriday);
+        d.setDate(nextFriday.getDate() + i);
+        dates.push(d.toISOString().split('T')[0]);
+    }
+
+    const startDate = dates[0];
+    const endDate = dates[2];
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=weathercode,temperature_2m_max&timezone=Europe%2FBerlin&start_date=${startDate}&end_date=${endDate}`;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.daily) return;
+            
+            const { time, weathercode, temperature_2m_max } = data.daily;
+            
+            let html = '';
+            
+            time.forEach((t, i) => {
+                const dateObj = new Date(t);
+                const dayName = dateObj.toLocaleDateString('pl-PL', { weekday: 'short' }).toUpperCase().replace('.', ''); 
+                const dd = dateObj.getDate().toString().padStart(2, '0');
+                const mm = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                const dateLabel = `(${dd}.${mm})`;
+
+                const temp = Math.round(temperature_2m_max[i]);
+                const code = weathercode[i];
+                let icon = '❓';
+                
+                // WMO Codes Mapping (Simplified)
+                if (code === 0) icon = '☀️';
+                else if (code >= 1 && code <= 3) icon = '⛅';
+                else if (code >= 45 && code <= 48) icon = '🌫';
+                else if (code >= 51 && code <= 67) icon = '🌧';
+                else if (code >= 71 && code <= 77) icon = '❄️';
+                else if (code >= 80 && code <= 82) icon = '🌧';
+                else if (code >= 95) icon = '⚡';
+                
+                html += `
+                    <div style="background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #ddd; text-align: center; min-width: 50px;">
+                        <div style="font-size: 0.7em; color: #555; font-weight: bold; margin-bottom: 2px;">${dayName} ${dateLabel}</div>
+                        <div style="font-size: 1.1em; color: #333;">${icon} ${temp}°</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Weather error:', err);
+            container.innerHTML = '<span style="color:red; font-size: 0.8em;">⚠️ Błąd pogody</span>';
+        });
+}
+
+// Call initWeather
+initWeather();
