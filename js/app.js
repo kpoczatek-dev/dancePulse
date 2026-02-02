@@ -728,7 +728,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Check if user already dismissed, but let's say we show it every session for now or stick to session?
     // User requested: "jak ktos sprobuje wejsc na telefonie niech otrzyma komunikat"
     // Let's use sessionStorage so it doesn't annoy on refresh, but shows on new tab.
-    if (isMobile() && !sessionStorage.getItem('mobile_warning_dismissed')) {
+    // Let's use sessionStorage so it doesn't annoy on refresh, but shows on new tab.
+    const forceMobile = new URLSearchParams(window.location.search).has('mobile');
+
+    if ((isMobile() || forceMobile) && (!sessionStorage.getItem('mobile_warning_dismissed') || forceMobile)) {
         if(mobileModal) {
             mobileModal.style.display = 'flex'; // Flex for centering
         }
