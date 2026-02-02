@@ -677,25 +677,67 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnHelp && modal) {
         btnHelp.onclick = function() {
-            if (modal.style.display === "block") {
-                modal.style.display = "none";
+            // Toggle class 'open' for CSS transition
+            // We also need to handle 'display' to ensure it exists in DOM for opacity transition
+            // The CSS: .modal { display: none; opacity: 0; visibility: hidden; }
+            // .modal.open { display: block; opacity: 1; visibility: visible; }
+            // Actually, display:block <-> none breaks transition unless we use keyframes or visibility.
+            // Let's rely on class toggling. The CSS I added handles display:block in .open?
+            // Let's check CSS. If I used display:none -> display:block, no transition happens for opacity.
+            // Better strategy: Always display: flex (or block), but visibility: hidden/visible and opacity.
+            // OR: use setTimeout for display.
+            
+            // Simpler approach for now: Toggle class. Adjust CSS to support it.
+            if (modal.classList.contains('open')) {
+                modal.classList.remove('open');
+                setTimeout(() => modal.style.display = 'none', 400); // Wait for transition
             } else {
-                modal.style.display = "block";
+                modal.style.display = 'flex'; // Ensure layout
+                // Force reflow
+                void modal.offsetWidth; 
+                modal.classList.add('open');
             }
         }
     }
 
     if (spanClose && modal) {
         spanClose.onclick = function() {
-            modal.style.display = "none";
+            modal.classList.remove('open');
+            setTimeout(() => modal.style.display = 'none', 400);
         }
     }
 
     if (modal) {
         window.addEventListener('click', function(event) {
             if (event.target == modal) {
-                modal.style.display = "none";
+                modal.classList.remove('open');
+                setTimeout(() => modal.style.display = 'none', 400);
             }
+        });
+    }
+
+
+    // --- MOBILE WARNING LOGIC ---
+    function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 800;
+    }
+
+    const mobileModal = document.getElementById('mobile-warning-modal');
+    const mobileCloseBtn = document.getElementById('mobile-warning-close');
+    
+    // Check if user already dismissed, but let's say we show it every session for now or stick to session?
+    // User requested: "jak ktos sprobuje wejsc na telefonie niech otrzyma komunikat"
+    // Let's use sessionStorage so it doesn't annoy on refresh, but shows on new tab.
+    if (isMobile() && !sessionStorage.getItem('mobile_warning_dismissed')) {
+        if(mobileModal) {
+            mobileModal.style.display = 'flex'; // Flex for centering
+        }
+    }
+
+    if (mobileCloseBtn) {
+        mobileCloseBtn.addEventListener('click', () => {
+            mobileModal.style.display = 'none';
+            sessionStorage.setItem('mobile_warning_dismissed', 'true');
         });
     }
 
