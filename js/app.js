@@ -1,7 +1,7 @@
-import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v16';
-import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v16';
-import { initWeather } from './weather.js?v=20260205_v16';
-import { parseClipboardData } from './parser.js?v=20260205_v16';
+import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v17';
+import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v17';
+import { initWeather } from './weather.js?v=20260205_v17';
+import { parseClipboardData } from './parser.js?v=20260205_v17';
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("[DancePuls] Inicjalizacja wersji 20260205...");
@@ -199,9 +199,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			selectMiasto.addEventListener('change', function () {
 				updateMiejscaOptions(this.value)
+				generujPost();
 			})
 			selectMiejsce.addEventListener('change', function () {
 				inputMiejsceInne.style.display = this.value === 'Inne' ? 'block' : 'none'
+				generujPost();
 			})
 			checkbox.addEventListener('change', function () {
 				eventBlock.style.display = this.checked ? 'block' : 'none'
@@ -226,7 +228,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 		block.appendChild(newContainer);
                 	}
                 }
+                
+                generujPost();
 			})
+			
+			// Dodaj event listenery do inputów
+			inputLink.addEventListener('input', generujPost);
+			inputMiastoInne.addEventListener('input', generujPost);
+			inputMiejsceInne.addEventListener('input', generujPost);
+			
+			// Dodaj event listenery do checkboxów stylów
+			styleBox.querySelectorAll('input.styl').forEach(cb => {
+				cb.addEventListener('change', generujPost);
+			});
+			
+			// Dodaj event listener do promote checkbox
+			promoteInput.addEventListener('change', generujPost);
 
 			updateMiejscaOptions(selectMiasto.value)
 
@@ -249,6 +266,9 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 		form.appendChild(block)
 	})
+	
+	// Wygeneruj początkowy post
+	generujPost();
 
 	// Filtrowanie
 	const filterSelect = document.getElementById('filter-select')
@@ -1156,7 +1176,6 @@ function generujPost() {
 			const miastoInne = eventBlock.querySelector('.miasto-inne')
 			const miejsce = eventBlock.querySelector('.miejsce')
 			const miejsceInne = eventBlock.querySelector('.miejsce-inne')
-			const opis = eventBlock.querySelector('.opis')
 			const link = eventBlock.querySelector('.link')
 			const styleCbs = eventBlock.querySelectorAll('input.styl:checked')
 			// Promote checkbox teraz jest w headerze (toggle-checkbox sibling)
@@ -1167,9 +1186,7 @@ function generujPost() {
 			const styleTekst = [...styleCbs].map(cb => cb.value).join('/')
 
 			const prefix = promote ? '⭐ ' : '➡️ '
-			dzienWiersz += `${prefix}${finalMiasto}: ${finalMiejsce} (${styleTekst})${
-				opis.value.trim() ? ` – ${opis.value.trim()}` : ''
-			}\n`
+			dzienWiersz += `${prefix}${finalMiasto}: ${finalMiejsce} (${styleTekst})\n`
 			if (link.value.trim()) dzienWiersz += `🔗 ${link.value.trim()}\n`
 
 			wynikAnkieta += `${dzienTekst}: ${finalMiasto} - ${finalMiejsce} (${styleTekst})\n`
