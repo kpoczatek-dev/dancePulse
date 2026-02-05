@@ -112,8 +112,11 @@
         try {
             const scripts = document.querySelectorAll('script[type="application/ld+json"]');
             for (const script of scripts) {
-                const json = JSON.parse(script.innerText);
-                if (json['@type'] === 'Event' || json['@type'] === 'SocialEvent') {
+                let json = JSON.parse(script.innerText);
+                if (Array.isArray(json)) {
+                    const found = json.find(item => item['@type'] === 'Event' || item['@type'] === 'SocialEvent');
+                    if (found) return found;
+                } else if (json['@type'] === 'Event' || json['@type'] === 'SocialEvent') {
                     return json;
                 }
             }
@@ -123,7 +126,8 @@
         return null;
     }
 
-    const isSingleEventPage = /\/events\/\d+/.test(window.location.href);
+    // Bardziej elastyczne wykrywanie strony wydarzenia
+    const isSingleEventPage = /\/events\/\d+/.test(window.location.href) || !!document.querySelector('meta[property="og:type"][content="article"]');
     
     if (isSingleEventPage) {
         console.log("🔍 Tryb: Pojedyncze wydarzenie");
@@ -133,7 +137,7 @@
              console.log("✅ Znaleziono dane strukturalne (JSON-LD)!");
              events.push({
                  url: jsonLD.url || window.location.href.split('?')[0],
-                 rawDate: jsonLD.startDate, // ISO String usually
+                 rawDate: jsonLD.startDate,
                  title: jsonLD.name,
                  location: jsonLD.location && jsonLD.location.name ? jsonLD.location.name + ', ' + (jsonLD.location.address?.streetAddress || '') : "Adres w opisie",
                  description: jsonLD.description || ""
@@ -142,95 +146,70 @@
              return;
         }
 
-        // --- FALLBACK DO DOM (OLD METHOD IMPROVED) ---
         console.warn("⚠️ Brak JSON-LD, próba klasyczna...");
-        
         let container = document.querySelector('div[role="main"]');
         const h1 = container ? container.querySelector('h1') : document.querySelector('h1');
         
-        if (!container && h1) container = h1.parentElement.parentElement.parentElement;
-        if (!container) container = document.body;
+        if (h1) {
+            let title = h1.innerText;
+            let detailsText = container ? container.innerText : document.body.innerText;
+                        let date = "";
+            if (!date) {
+                const mainObj = document.querySelector('div[role="main"]') || document.body;
+                
+                // Szukamy najpierw bardzo blisko H1 (tytułu)
+                const nearTitle = h1.parentElement.innerText.split('\n');
+                for (const line of nearTitle) {
+                    if (parseFBDate(line) && line.length < 50) {
+                        date = line;
+                        break;
+                    }
+                }
 
-        if (container) {
-            // Expand
-            container.querySelectorAll('div[role="button"], span[role="button"]').forEach(btn => {
-                if (btn.innerText.includes("Wyświetl więcej") || btn.innerText.includes("See more")) try { btn.click(); } catch(e){}
-            });
-            await sleep(1000);
-
-            // Title
-            let title = h1 ? h1.innerText : "Bez tytułu";
-            
-            // Description extraction
-            let detailsText = "";
-            const xpath = "//*[contains(text(), 'Szczegółowe informacje') or contains(text(), 'Details')]";
-            const detailsHeaderSnap = document.evaluate(xpath, container, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-            
-            if (detailsHeaderSnap.snapshotLength > 0) {
-                const node = detailsHeaderSnap.snapshotItem(0);
-                const wrapper = node.closest('div.x1yztbdb') || node.closest('div[class*="x1"]');
-                if (wrapper) detailsText = wrapper.innerText;
-            }
-            if (detailsText.length < 50) detailsText = container.innerText;
-
-            // Analiza linii dla Daty
-            const lines = container.innerText.split('\n').filter(l => l.trim().length > 1);
-            let date = "";
-            let location = "";
-
-            // A. Selektory
-            const dateSelectors = [
-                'div[data-testid="event-permalink-details"]',
-                'div#event_time_info',
-                'div.x1e56ztr.x1xmf6yo',
-            ];
-
-            for (const sel of dateSelectors) {
-                const el = document.querySelector(sel);
-                if (el && el.innerText.trim().length > 0) {
-                     const txt = el.innerText.trim();
-                     if (txt.includes("Oznacz jako") || txt.includes("Mark as")) continue;
-                     date = txt;
-                     break;
+                const dateSelectors = [
+                    'div[data-testid="event-permalink-details"]', 
+                    'div#event_time_info', 
+                    'span.x193iq5w.xeuugli[dir="auto"]',
+                    'div.x1e56ztr.x1xmf6yo span[dir="auto"]' // Dodatkowy selektor FB
+                ];
+                for (const sel of dateSelectors) {
+                    const elements = mainObj.querySelectorAll(sel);
+                    for (const el of elements) {
+                        const txt = el.innerText.trim();
+                        const isSidebar = el.closest('aside') || el.closest('[role="complementary"]') || el.closest('.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6');
+                        if (parseFBDate(txt) && !isSidebar && txt.length > 5 && txt.length < 100) { 
+                            date = txt; 
+                            console.log("📅 Znaleziona data (detale):", date);
+                            break; 
+                        }
+                    }
+                    if (date) break;
                 }
             }
 
-            if (!date) {
-               // Simple Loop - Avoid "Oznacz jako przeczytane"
-               for(const line of lines) {
-                   if(line.includes("Oznacz jako") || line.includes("Mark as")) continue;
-                   if(parseFBDate(line)) {
-                       date = line;
-                       break;
-                   }
-               }
-            }
-            
-            // FINAL SAFETY CHECK
-            if (date && (date.includes("Oznacz jako") || date.includes("Mark as"))) {
-                console.warn("⚠️ Wykryto błędną datę ('Oznacz jako'), usuwam.");
-                date = "";
-            }
-            
-            // Location fallback
-             if (!location) {
-                 for(const line of lines) {
-                    if (line.includes(',') && /Katowice|Gliwice|Sosnowiec/i.test(line)) {
-                        location = line;
+            // Ostatnia szansa: Szukanie w TEKŚCIE całego kontenera jeśli wciąż brak
+            if (!date && detailsText) {
+                const lines = detailsText.split('\n').slice(0, 10); // Sprawdzamy pierwsze 10 linii
+                for (const line of lines) {
+                    if (parseFBDate(line) && line.length > 5 && line.length < 80) {
+                        date = line;
+                        console.log("📅 Znaleziona data (fallback text):", date);
                         break;
                     }
-                 }
-             }
-
-            if (!EXCLUDED_TITLES.some(t => title.toUpperCase().includes(t))) {
-                events.push({
-                    url: window.location.href.split('?')[0],
-                    rawDate: date || "BRAK DATY",
-                    title: title,
-                    location: location || "Adres w opisie",
-                    description: cleanDescription(detailsText)
-                });
+                }
             }
+
+            let location = "";
+            const locLines = detailsText.split('\n').filter(l => l.includes(',') && /Katowice|Gliwice|Sosnowiec|Zabrze|Tychy|Chorzów|Bielsko|Kraków/i.test(l));
+            if (locLines.length > 0) location = locLines[0];
+
+            events.push({
+                url: window.location.href.split('?')[0],
+                rawDate: date || "BRAK DATY",
+                title: title,
+                location: location || "Adres w opisie",
+                description: cleanDescription(detailsText)
+            });
         }
         
         finalize(events);
@@ -245,9 +224,18 @@
 
     const today = new Date();
     today.setHours(0,0,0,0);
-    const nextSunday = new Date(today);
-    nextSunday.setDate(today.getDate() + (7 - today.getDay()) % 7); // do najbliższej niedzieli (0-6)
-    nextSunday.setHours(23, 59, 59, 999);
+
+    // Filtr: OD dzisiaj (aby złapać bieżący weekend)
+    const startWindow = new Date(today);
+
+    // Limit: DO najbliższej niedzieli
+    const limitDate = new Date(today);
+    const dayOfWeek = today.getDay(); // 0-niedziela
+    const daysToNextSunday = (7 - dayOfWeek) % 7;
+    limitDate.setDate(today.getDate() + daysToNextSunday);
+    limitDate.setHours(23, 59, 59, 999);
+
+    console.log(`📅 Zakres skanowania listy: od dziś (${startWindow.toLocaleDateString()}) do najbliższej niedzieli (${limitDate.toLocaleDateString()})`);
 
     const links = Array.from(document.querySelectorAll('a[href*="/events/"]'));
     const uniqueLinks = new Set();
@@ -258,42 +246,32 @@
         uniqueLinks.add(href);
 
         let container = link.closest('div[style*="border-radius"], div[class*="x1"], div[role="article"]');
-        if(!container) container = link.parentElement.parentElement.parentElement;
+        if(!container) container = link.parentElement.parentElement;
         if (container) {
-            if (container.querySelectorAll('a[href*="/events/"]').length > 2) container = link.parentElement.parentElement;
-
             const textContent = container.innerText;
             const lines = textContent.split('\n').filter(l => l.trim().length > 0);
             
             let dateStr = "";
             let title = "";
-            let location = "";
-
             const isDateLine = (txt) => parseFBDate(txt) !== null;
 
             if (isDateLine(lines[0])) {
                 dateStr = lines[0];
                 title = lines[1] || "";
-                location = lines[2] || "";
             } else if (isDateLine(lines[1])) {
                 title = lines[0];
                 dateStr = lines[1];
-                location = lines[2] || "";
             } else {
                 title = link.innerText;
                 dateStr = lines.find(l => isDateLine(l)) || "";
             }
 
-            if(dateStr.toUpperCase().includes("INTERESUJE")) {
-                 dateStr = lines.find(l => isDateLine(l)) || dateStr;
-            }
-            if (!title) title = "Bez tytułu";
-
             const eventDate = parseFBDate(dateStr);
             if (eventDate) {
                 const checkDate = new Date(eventDate);
                 checkDate.setHours(0,0,0,0);
-                if (checkDate < today || checkDate > nextSunday) return;
+                // Sprawdzamy zakres OD NIEDZIELI
+                if (checkDate < startWindow || checkDate > limitDate) return;
             } else {
                 return;
             }
@@ -305,7 +283,7 @@
                 url: href,
                 rawDate: dateStr,
                 title: title,
-                location: location,
+                location: "",
                 description: textContent
             });
         }

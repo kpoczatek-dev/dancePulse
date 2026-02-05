@@ -24,15 +24,16 @@ export const miejscaWgMiasta = {
     'Tarnowskie Góry': ['Ocean Club'],
     Rybnik: ['Pink Bowling & Club'],
     'Dąbrowa Górnicza': ['Beach Bar Pogoria'],
+    'Częstochowa': ['Częstotańcz'],
 };
 
 export const style = [
-    'Cubana', // First!
+    'Zouk',
+    'Cubana',
     'Bachata',
     'Kizomba',
     // Secondary
     'Salsa',
-    'Zouk',
     'Linia',
     'Rumba',
     'Afro',
@@ -62,6 +63,8 @@ export const adresyMap = {
     'jana pawła': 'Mohito',
     'mohito gliwice': 'Mohito',
     'mohito tychy': 'Mohito',
+    'marii konopnickiej 29': 'Forum Tańca',
+    'spółdzielczości 4': 'Częstotańcz',
 };
 
 export const adresMiastoSztywne = {
@@ -69,7 +72,9 @@ export const adresMiastoSztywne = {
     'jana pawła': 'Tychy',
     'dworkowa 2': 'Bielsko-Biała',
     'mohito gliwice': 'Gliwice',
-    'mohito tychy': 'Tychy'
+    'mohito tychy': 'Tychy',
+    'marii konopnickiej 29': 'Kraków',
+    'spółdzielczości 4': 'Częstochowa',
 };
 
 export const styleKeywords = {
@@ -87,7 +92,6 @@ export const styleKeywords = {
 };
 
 export const FB_QUICK_LINKS = [
-    'https://pl-pl.facebook.com/pg/kafejkawiarnia/events/',
     'https://www.facebook.com/BeachBarPogoria/events',
     'https://www.facebook.com/TapasLaFirinda/events',
     'https://www.facebook.com/plonspl/events',
@@ -106,7 +110,7 @@ export const FB_QUICK_LINKS = [
     'https://www.facebook.com/groups/233407090031091/events',
     'https://www.facebook.com/groups/salsa.krakow.all/events',
     'https://www.facebook.com/groups/1002046083751768/events',
-    'https://www.facebook.com/SALSA.BIELSKO',
-    'https://www.facebook.com/publahabana/upcoming_hosted_events',
-    'https://www.facebook.com/forumtanca'
+    'https://www.facebook.com/SALSA.BIELSKO/events',
+    'https://www.facebook.com/publahabana/events',
+    'https://www.facebook.com/forumtanca/events'
 ];

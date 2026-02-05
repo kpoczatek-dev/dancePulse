@@ -10,6 +10,18 @@ export function formatujDatePL(date) {
 }
 
 /**
+ * Zwraca datę w formacie YYYY-MM-DD (lokalny czas)
+ * @param {Date} date 
+ * @returns {string} np. "2024-02-05"
+ */
+export function toYMD(date) {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+/**
  * Dodaje określoną liczbę dni do podanej daty
  * @param {Date|string} date - Data wejściowa
  * @param {number} ile - Liczba dni do dodania
@@ -36,6 +48,7 @@ export function generujDniOdJutra(ileDni, dniTygodnia) {
         const dzienTyg = dniTygodnia[d.getDay()]
         result.push({
             date: d,
+            ymd: toYMD(d),
             label: `${dzienTyg} (${formatujDatePL(d)})`,
             dzienTygIndex: d.getDay(),
         })
@@ -82,13 +95,14 @@ export function parsujDateFB(text) {
     };
     
     // Match day + month name (full or short)
-    const regexMonth = /(\d{1,2})\s+(STYCZNIA|STY|LUTEGO|LUT|MARCA|MAR|KWIETNIA|KWI|MAJA|MAJ|CZERWCA|CZE|LIPCA|LIP|SIERPNIA|SIE|WRZEŚNIA|WRZ|PAŹDZIERNIKA|PAŹ|LISTOPADA|LIS|GRUDNIA|GRU)/i;
+    const regexMonth = /(\d{1,2})[\s\n\r]+(STYCZNIA|STY|LUTEGO|LUT|MARCA|MAR|KWIETNIA|KWI|MAJA|MAJ|CZERWCA|CZE|LIPCA|LIP|SIERPNIA|SIE|WRZEŚNIA|WRZ|PAŹDZIERNIKA|PAŹ|LISTOPADA|LIS|GRUDNIA|GRU)/i;
     const matchMonth = text.match(regexMonth);
 
     if (matchMonth) {
         const day = parseInt(matchMonth[1], 10);
         const monthStr = matchMonth[2].toUpperCase();
         const monthIndex = miesiacMap[monthStr]; // 0-11
+        console.log(`[parsujDateFB] Dopasowano Miesiąc: ${day} + ${monthStr}`);
 
         let year = currentYear;
         // Roll over year logic: if current is Dec and event is Jan -> Next Year.
@@ -119,12 +133,14 @@ export function parsujDateFB(text) {
     }
 
     // 3. Day + Weekday: "31 SOBOTA", "31 SOB"
-    const regexDayWeekday = /(\d{1,2})\s+(NIEDZIELA|NIE|ND|PONIEDZIAŁEK|PON|PN|WTOREK|WTO|WT|ŚRODA|ŚRO|SR|CZWARTEK|CZW|PIĄTEK|PIĄ|PT|SOBOTA|SOB|SB)/i;
+    // Ulepszony regex: \b...\b zapobiega dopasowaniu wewnątrz wyrazów (np. TŁUSTOCZWARTKOWY nie złapie CZWARTEK)
+    const regexDayWeekday = /(\d{1,2})[\s\n\r]+\b(NIEDZIELA|NIE|ND|PONIEDZIAŁEK|PON|PN|WTOREK|WTO|WT|ŚRODA|ŚRO|SR|CZWARTEK|CZW|PIĄTEK|PIĄ|PT|SOBOTA|SOB|SB)\b/i;
     const matchDW = text.match(regexDayWeekday);
     
     if (matchDW) {
         const day = parseInt(matchDW[1], 10);
         const weekdayStr = matchDW[2].toUpperCase();
+        console.log(`%c[parsujDateFB] Dopasowano Dzień+Tydzień: ${day} + ${weekdayStr}`, "color: blue; font-weight: bold;");
         
         const dniMap = {
             'NIEDZIELA': 0, 'NIE': 0, 'ND': 0,
@@ -151,7 +167,7 @@ export function parsujDateFB(text) {
     }
     
     // 4. Weekday Only: "SOBOTA" (implies next occurance)
-    const regexWeekdayOnly = /(NIEDZIELA|NIE|ND|PONIEDZIAŁEK|PON|PN|WTOREK|WTO|WT|ŚRODA|ŚRO|SR|CZWARTEK|CZW|PIĄTEK|PIĄ|PT|SOBOTA|SOB|SB)/i;
+    const regexWeekdayOnly = /\b(NIEDZIELA|NIE|ND|PONIEDZIAŁEK|PON|PN|WTOREK|WTO|WT|ŚRODA|ŚRO|SR|CZWARTEK|CZW|PIĄTEK|PIĄ|PT|SOBOTA|SOB|SB)\b/i;
     const matchW = text.match(regexWeekdayOnly);
     if (matchW) {
          const weekdayStr = matchW[1].toUpperCase();

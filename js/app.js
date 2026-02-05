@@ -1,9 +1,10 @@
-import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js';
-import { parsujDateFB, formatujDatePL, dodajDni, generujDniOdJutra } from './utils.js';
-import { initWeather } from './weather.js';
-import { parseClipboardData } from './parser.js';
+import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v6';
+import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v6';
+import { initWeather } from './weather.js?v=20260205_v6';
+import { parseClipboardData } from './parser.js?v=20260205_v6';
 
 document.addEventListener('DOMContentLoaded', function () {
+    console.log("[DancePuls] Inicjalizacja wersji 20260205...");
     // LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia imported from config.js
 
     // Helpers imported
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	dni.forEach(dzienObj => {
 		const block = document.createElement('div')
 		block.className = 'day-block'
-		block.dataset.date = dzienObj.date.toISOString()
+		block.dataset.date = dzienObj.ymd;
 		block.dataset.dzienTygIndex = dzienObj.dzienTygIndex
 		block.innerHTML = `<h3>${dzienObj.label}</h3>`
 
@@ -134,8 +135,11 @@ document.addEventListener('DOMContentLoaded', function () {
 			const styleBox = document.createElement('div')
 			styleBox.className = 'checkboxes'
             
-            const primaryStyles = style.slice(0, 3);
-            const secondaryStyles = style.slice(3);
+            console.log("%c[DancePuls] Generowanie listy stylów. Zouk jest na pozycji: " + style.indexOf('Zouk'), "background: green; color: white; padding: 2px 5px;");
+            
+            // Pokaż pierwsze 6 stylów (teraz Zouk jest na 1. miejscu w config.js)
+            const primaryStyles = style.slice(0, 6);
+            const secondaryStyles = style.slice(6);
             
             const primaryHtml = primaryStyles
 				.map(s => `<label><input type="checkbox" class="styl" value="${s}"> ${s}</label>`)
@@ -340,6 +344,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const btnOpenKSH = document.getElementById('open-ksh-btn');
+    if (btnOpenKSH) {
+        btnOpenKSH.addEventListener('click', () => {
+            window.open('https://www.facebook.com/groups/519446499987373', '_blank');
+        });
+    }
+
+    const btnImport = document.getElementById('import-btn');
+    if (btnImport) {
+        btnImport.addEventListener('click', () => {
+            importujZFacebooka(false); // Manualny: nie cichy!
+        });
+    }
+
 	applyFilter()
     
     // --- AUTOSAVE & LIVE PREVIEW ---
@@ -513,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('focus', () => {
          // Small delay to ensure focus is active
         setTimeout(() => {
-             importujZFacebooka(); // Loud mode!
+             importujZFacebooka(true); // Silent mode for auto-paste!
         }, 500);
     });
 
@@ -528,20 +546,30 @@ document.addEventListener('DOMContentLoaded', function () {
         let jsonText;
         try {
             jsonText = await navigator.clipboard.readText();
+            console.log("[Import] Surowe dane ze schowka:", jsonText ? jsonText.substring(0, 100) + "..." : "PUSTY");
         } catch (err) {
             if (!silent) alert('Błąd odczytu schowka! (Może wymagane kliknięcie w stronę?)'); 
             return;
         }
 
-        if (!jsonText || !jsonText.trim()) return;
+        if (!jsonText || !jsonText.trim()) {
+            if (!silent) alert('Schowek jest pusty!');
+            return;
+        }
 
         // SMART CHECK:
-        if (!jsonText.trim().startsWith('[')) return;
+        if (!jsonText.trim().startsWith('[')) {
+            if (!silent) alert('Dane w schowku nie wyglądają na format FB (brak nawiasu [ ).\nUpewnij się, że użyłeś skrapera w konsoli.');
+            return;
+        }
 
         try {
             const { events, skippedReasons } = parseClipboardData(jsonText);
             
             let importedCount = 0;
+            let duplicateCount = 0;
+            let noSpaceCount = 0;
+
             const getIds = (url) => {
                  if (!url) return [];
                  return url.match(/\d{8,}/g) || [];
@@ -549,32 +577,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
             events.forEach(ev => {
                  const parsedDate = ev.parsedDate;
-                 const dayBlock = Array.from(document.querySelectorAll('.day-block')).find(block => {
-                    const d = new Date(block.dataset.date);
-                    return d.getDate() === parsedDate.getDate() && 
-                           d.getMonth() === parsedDate.getMonth() &&
-                           d.getFullYear() === parsedDate.getFullYear();
+                 const evYMD = toYMD(parsedDate);
+                 console.log(`[Import] Przetwarzanie: "${ev.title}" na dzień ${evYMD}`);
+                const dayBlock = Array.from(document.querySelectorAll('.day-block')).find(block => {
+                    return block.dataset.date === evYMD;
                 });
+                
+                if (!dayBlock) {
+                    skippedReasons.push(`"${ev.title}": Brak dnia ${evYMD} w kalendarzu (generator obsługuje ${LICZBA_DNI} dni)`);
+                    return;
+                }
 
-                if (dayBlock) {
-                    const newIds = getIds(ev.url);
-                    // CHECK DUPLICATES IN DAY BLOCK
-                    const alreadyExists = Array.from(dayBlock.querySelectorAll('.event-block')).some(eb => {
-                        if (eb.style.display === 'none') return false; 
-                        
-                        const linkVal = eb.querySelector('.link').value || '';
-                        
-                        if (linkVal && linkVal === ev.url) return true;
-                        
-                        const existingIds = getIds(linkVal);
-                        if (newIds.length > 0 && existingIds.length > 0) {
-                             if (newIds.some(id => existingIds.includes(id))) return true;
-                        }
-                        
-                        return false;
-                    });
+                console.log(`[Import] Znaleziono blok dnia dla ${parsedDate.getDate()}.${parsedDate.getMonth()+1}`);
+                const newIds = getIds(ev.url);
+                // CHECK DUPLICATES IN DAY BLOCK
+                const alreadyExists = Array.from(dayBlock.querySelectorAll('.event-block')).some(eb => {
+                    if (eb.style.display === 'none') return false; 
+                    const linkVal = eb.querySelector('.link').value || '';
+                    if (linkVal && linkVal === ev.url) return true;
+                    const existingIds = getIds(linkVal);
+                    if (newIds.length > 0 && existingIds.length > 0) {
+                         if (newIds.some(id => existingIds.includes(id))) return true;
+                    }
+                    return false;
+                });
                     
-                    if (alreadyExists) return;
+                    if (alreadyExists) {
+                        console.warn(`[Import] Pominięto duplikat: "${ev.title}"`);
+                        duplicateCount++;
+                        return;
+                    }
 
                     const emptySlot = Array.from(dayBlock.querySelectorAll('.event-block')).find(eb => {
                         return eb.style.display === 'none' && (!eb.querySelector('.link').value);
@@ -594,13 +626,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         let bestCity = 'Katowice'; 
                         let bestPlace = null;
-                        
                         const fullText = ((ev.location||'') + ' ' + (ev.title||'') + ' ' + (ev.description||'')).toLowerCase();
                         
                         for (const [addr, place] of Object.entries(adresyMap || {})) {
                              if (fullText.includes(addr)) { bestPlace = place; break; }
                         }
-                        
                         if (!bestPlace) {
                              for (const city of Object.keys(miejscaWgMiasta || {})) {
                                  if (fullText.includes(city.toLowerCase())) {
@@ -622,20 +652,17 @@ document.addEventListener('DOMContentLoaded', function () {
                             miastoSelect.value = bestCity;
                             miastoSelect.dispatchEvent(new Event('change')); 
                             miejsceSelect.value = bestPlace;
+                        } else if (ev.location) {
+                            miastoSelect.value = 'Inne';
+                            miastoSelect.dispatchEvent(new Event('change'));
+                            miastoInne.value = ev.location;
                         } else {
-                            if (ev.location) {
-                                miastoSelect.value = 'Inne';
-                                miastoSelect.dispatchEvent(new Event('change'));
-                                miastoInne.value = ev.location;
-                            } else {
-                                miastoSelect.value = 'Katowice';
-                                miastoSelect.dispatchEvent(new Event('change'));
-                            }
+                            miastoSelect.value = 'Katowice';
+                            miastoSelect.dispatchEvent(new Event('change'));
                         }
 
                         const checkboxes = eventBlock.querySelectorAll('input.styl');
                         checkboxes.forEach(cb => cb.checked = false); 
-                        
                         Object.entries(styleKeywords || {}).forEach(([key, val]) => {
                             if (fullText.includes(key)) {
                                 const cb = Array.from(checkboxes).find(c => c.value === val);
@@ -643,41 +670,34 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         });
                         
-                        // Auto-fill Title/Description if field available (Assuming 'opis' is description)
-                        // Original code didn't convert Title -> Opis explicitly, but user might like it.
-                        // I'll leave as is to avoid breaking changes (Only fills Dropdowns and Checkboxes).
-
                         importedCount++;
+                    } else {
+                        noSpaceCount++;
                     }
-                }
             });
 
             if (importedCount > 0) {
-                alert(`Zaimportowano ${importedCount} wydarzeń!`);
+                alert(`✅ Zaimportowano ${importedCount} wydarzeń!`);
                 zapiszStan();
                 generujPost();
                 
-                if (window.scraperScriptCache) {
-                    navigator.clipboard.writeText(window.scraperScriptCache);
-                } else {
-                    fetch('tools/fb_scraper.js').then(r=>r.text()).then(t=>navigator.clipboard.writeText(t));
-                }
+                // Odśwież cache skrapera w schowku (dla wygody)
+                if (window.scraperScriptCache) navigator.clipboard.writeText(window.scraperScriptCache);
 
-            } else {
-                let msg = 'Nie zaimportowano żadnych wydarzeń.';
+            } else if (!silent) {
+                let msg = '❌ Nie zaimportowano żadnych nowych wydarzeń.';
+                if (duplicateCount > 0) msg += `\n- Pominięto ${duplicateCount} duplikatów (są już na liście).`;
+                if (noSpaceCount > 0) msg += `\n- Brak wolnych slotów na wybrane dni dla ${noSpaceCount} wydarzeń!`;
+                
                 if (skippedReasons.length > 0) {
-                    msg += '\n\nOto powody:\n' + skippedReasons.slice(0, 5).join('\n');
-                    if(skippedReasons.length > 5) msg += `\n...i ${skippedReasons.length - 5} więcej.`;
-                    msg += '\n\nUpewnij się, że używasz NOWEGO skrapera (JSON-LD), który poprawnie czyta daty!';
-                } else {
-                    msg += '\n(Być może są już na liście lub są poza zakresem 14 dni)';
+                    msg += '\n\nInne powody:\n' + skippedReasons.slice(0, 3).join('\n');
                 }
                 alert(msg);
             }
 
         } catch (e) {
             console.error('Import Error:', e);
-            alert('Błąd importu. Sprawdź konsolę.');
+            if (!silent) alert('Błąd importu: ' + e.message);
         }
     }
 

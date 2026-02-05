@@ -44,24 +44,42 @@
         </select>
       </div>
 
-      <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-        <button id="reset-history-btn"
-          onclick="if(confirm('Na pewno wyczyścić historię zatwierdzonych zgłoszeń?')) { localStorage.removeItem('party_inbox_done'); location.reload(); }"
-          style="flex: 1; background: #e0e0e0; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc;">
-          🗑️ Reset Historii
+      <!-- Rząd 1: Linki zewnętrzne -->
+      <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+        <button id="open-fb-links-btn"
+          style="flex: 1; background: #b3e5fc; color: #01579b; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
+          🌐 Otwórz FB
         </button>
-        <button
-          onclick="if(confirm('Na pewno wyczyścić cały formularz?')) { localStorage.removeItem('party_generator_stan'); location.reload(); }"
-          style="flex: 1; background: #e0e0e0; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc;">
-          🧹 Wyczyść Formularz
+        <button id="open-ksh-btn"
+          style="flex: 1; background: #b3e5fc; color: #01579b; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
+          🏠 Otwórz KSH
         </button>
+      </div>
+
+      <!-- Rząd 2: Narzędzia importu -->
+      <div style="display: flex; gap: 5px; margin-bottom: 5px;">
         <button id="copy-scraper-btn"
           style="flex: 1; background: #ffcc80; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
           📋 Kopiuj Skraper
         </button>
-        <button id="open-fb-links-btn"
-          style="flex: 1; background: #b3e5fc; color: #01579b; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
-          🌐 Otwórz FB
+        <button id="import-btn"
+          style="flex: 1; background: #c8e6c9; color: #2e7d32; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;"
+          title="Próbuje zaimportować wydarzenia z danych w schowku">
+          📥 Wklej i Importuj
+        </button>
+      </div>
+
+      <!-- Rząd 3: Czyszczenie i Reset -->
+      <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+        <button id="reset-history-btn"
+          onclick="if(confirm('Na pewno wyczyścić historię zatwierdzonych zgłoszeń?')) { localStorage.removeItem('party_inbox_done'); location.reload(); }"
+          style="flex: 1; background: #f5f5f5; color: #666; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #ccc;">
+          🗑️ Reset Historii
+        </button>
+        <button
+          onclick="if(confirm('Na pewno wyczyścić cały formularz?')) { localStorage.removeItem('party_generator_stan'); location.reload(); }"
+          style="flex: 1; background: #f5f5f5; color: #666; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #ccc;">
+          🧹 Wyczyść Formularz
         </button>
       </div>
 
@@ -188,9 +206,14 @@
     </div>
 
   </div>
+
+  <footer style="text-align: center; padding: 20px; color: #666; font-size: 0.85em;">
+    zrobione przez <a href="https://twojastronawww.pl/" target="_blank"
+      style="color: #2196f3; text-decoration: none; font-weight: bold;">TwojaStronaWWW</a>
+  </footer>
 </body>
 
-<script type="module" src="js/app.js?v=20260130"></script>
+<script type="module" src="js/app.js?v=20260205_v6"></script>
 
 </html>
 
