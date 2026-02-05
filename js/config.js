@@ -85,3 +85,28 @@ export const styleKeywords = {
     'koncert': 'Koncert',
     'reggaeton': 'Reggeton', 'reggeton': 'Reggeton'
 };
+
+export const FB_QUICK_LINKS = [
+    'https://pl-pl.facebook.com/pg/kafejkawiarnia/events/',
+    'https://www.facebook.com/BeachBarPogoria/events',
+    'https://www.facebook.com/TapasLaFirinda/events',
+    'https://www.facebook.com/plonspl/events',
+    'https://www.facebook.com/goodmood.dance/events',
+    'https://www.facebook.com/SzkolaTancaMohito/events',
+    'https://www.facebook.com/pg/LaClaveKatowice/events/',
+    'https://pl-pl.facebook.com/pg/tanecznakompaniapl/events/',
+    'https://www.facebook.com/pg/SzkolaTancaMilPasos/events/',
+    'https://www.facebook.com/SzkolaTancaMohitoGliwice/events/?ref=page_internal',
+    'https://www.facebook.com/Szko%C5%82a-Ta%C5%84ca-La-Clave-Gliwice-101725695845027/events/?ref=page_internal',
+    'https://www.facebook.com/SzkolaTancaCorazon/events',
+    'https://www.facebook.com/danceloveit/events',
+    'https://www.facebook.com/salsahousekrakow/events',
+    'https://www.facebook.com/SabrosaDanceStudio/events',
+    'https://www.facebook.com/groups/110970745634828/events',
+    'https://www.facebook.com/groups/233407090031091/events',
+    'https://www.facebook.com/groups/salsa.krakow.all/events',
+    'https://www.facebook.com/groups/1002046083751768/events',
+    'https://www.facebook.com/SALSA.BIELSKO',
+    'https://www.facebook.com/publahabana/upcoming_hosted_events',
+    'https://www.facebook.com/forumtanca'
+];

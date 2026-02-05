@@ -1,4 +1,4 @@
-import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords } from './config.js';
+import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js';
 import { parsujDateFB, formatujDatePL, dodajDni, generujDniOdJutra } from './utils.js';
 import { initWeather } from './weather.js';
 import { parseClipboardData } from './parser.js';
@@ -326,6 +326,17 @@ document.addEventListener('DOMContentLoaded', function () {
                  window.scraperScriptCache = t; 
                  navigator.clipboard.writeText(t).then(() => alert('Nowy skrypt (JSON-LD) skopiowany!'));
              });
+        });
+    }
+
+    const btnOpenFB = document.getElementById('open-fb-links-btn');
+    if (btnOpenFB) {
+        btnOpenFB.addEventListener('click', () => {
+            if (confirm(`Czy otworzyć ${FB_QUICK_LINKS.length} zakładek FB w nowych oknach? (Może być wymagana zgoda na pop-upy)`)) {
+                FB_QUICK_LINKS.forEach(url => {
+                    window.open(url, '_blank');
+                });
+            }
         });
     }
 
