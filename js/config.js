@@ -28,18 +28,18 @@ export const miejscaWgMiasta = {
 };
 
 export const style = [
-    'Zouk',
     'Cubana',
-    'Bachata',
-    'Kizomba',
-    // Secondary
     'Salsa',
+    'Bachata',
+    // Secondary (rozwijane)
+    'Kizomba',
     'Linia',
     'Rumba',
     'Afro',
     'Koncert',
     'Latino',
     'Reggeton',
+    'Zouk',
 ];
 
 export const dniTygodnia = ['NIEDZIELA', 'PONIEDZIAŁEK', 'WTOREK', 'ŚRODA', 'CZWARTEK', 'PIĄTEK', 'SOBOTA'];

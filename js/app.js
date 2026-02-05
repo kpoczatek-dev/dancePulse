@@ -1,7 +1,7 @@
-import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v14';
-import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v14';
-import { initWeather } from './weather.js?v=20260205_v14';
-import { parseClipboardData } from './parser.js?v=20260205_v14';
+import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v16';
+import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v16';
+import { initWeather } from './weather.js?v=20260205_v16';
+import { parseClipboardData } from './parser.js?v=20260205_v16';
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("[DancePuls] Inicjalizacja wersji 20260205...");
@@ -54,10 +54,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
 
-		for (let i = 0; i < 5; i++) {
+		// Funkcja tworząca kontener wydarzenia (używana przy inicjalizacji i dynamicznym dodawaniu)
+		function createEventContainer(block, index) {
 			const container = document.createElement('div')
-            container.className = 'event-container' // Add class for CSS
-            container.draggable = true // Enable Drag
+            container.className = 'event-container'
+            container.draggable = true
             
             container.addEventListener('dragstart', () => {
                 container.classList.add('dragging')
@@ -65,14 +66,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             container.addEventListener('dragend', () => {
                 container.classList.remove('dragging')
-                generujPost(); // Refresh post after reordering
+                generujPost();
             })
 
 			const checkbox = document.createElement('input')
 			checkbox.type = 'checkbox'
-            checkbox.className = 'toggle-checkbox' // Add class for selection
+            checkbox.className = 'toggle-checkbox'
 
-            // Promote button (moved to header)
 			const promoteInput = document.createElement('input')
 			promoteInput.type = 'checkbox'
 			promoteInput.className = 'promowane'
@@ -80,13 +80,11 @@ document.addEventListener('DOMContentLoaded', function () {
             promoteLabel.style.cursor = 'pointer';
             promoteLabel.style.marginLeft = '10px';
             promoteLabel.style.marginRight = '5px';
-            promoteLabel.style.display = 'none'; // Hidden by default
+            promoteLabel.style.display = 'none';
 			promoteLabel.appendChild(promoteInput)
-			promoteLabel.append(' ⭐') // Minimalist icon
+			promoteLabel.append(' ⭐')
             
-            // Prevent expanding/collapsing when clicking promote
             promoteLabel.addEventListener('click', function(e) { e.stopPropagation(); });
-
 
 			const toggle = document.createElement('label')
             toggle.style.display = 'flex';
@@ -94,10 +92,8 @@ document.addEventListener('DOMContentLoaded', function () {
             toggle.style.cursor = 'pointer';
 
 			toggle.appendChild(checkbox)
-			toggle.append(` Wydarzenie taneczne ${i + 1} `) 
+			toggle.append(` Wydarzenie taneczne ${index + 1} `) 
             toggle.appendChild(promoteLabel)
-
-
 
 			const eventBlock = document.createElement('div')
 			eventBlock.className = 'event-block'
@@ -127,20 +123,13 @@ document.addEventListener('DOMContentLoaded', function () {
 			inputLink.type = 'text'
 			inputLink.className = 'link'
 			inputLink.placeholder = 'Link'
-
-			const opisInput = document.createElement('input')
-			opisInput.type = 'text'
-			opisInput.className = 'opis'
-			opisInput.placeholder = 'Krótki opis'
             
 			const styleBox = document.createElement('div')
 			styleBox.className = 'checkboxes'
             
-            console.log("%c[DancePuls] Generowanie listy stylów. Zouk jest na pozycji: " + style.indexOf('Zouk'), "background: green; color: white; padding: 2px 5px;");
-            
-            // Pokaż pierwsze 6 stylów (teraz Zouk jest na 1. miejscu w config.js)
-            const primaryStyles = style.slice(0, 6);
-            const secondaryStyles = style.slice(6);
+            // Pokaż pierwsze 3 style (Cubana, Salsa, Bachata)
+            const primaryStyles = style.slice(0, 3);
+            const secondaryStyles = style.slice(3);
             
             const primaryHtml = primaryStyles
 				.map(s => `<label><input type="checkbox" class="styl" value="${s}"> ${s}</label>`)
@@ -153,17 +142,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 details.style.display = 'inline-block';
                 details.style.verticalAlign = 'middle';
                 details.style.marginLeft = '10px'; 
-                details.style.position = 'relative'; // Anchor for absolute content
+                details.style.position = 'relative';
 
                 const summary = document.createElement('summary');
-                summary.textContent = '▼'; // Just arrow
+                summary.textContent = '▼';
                 summary.style.cursor = 'pointer';
-                summary.style.fontSize = '1.2em'; // slightly larger
+                summary.style.fontSize = '1.2em';
                 summary.style.userSelect = 'none';
-                summary.style.listStyle = 'none'; // Hide default marker
-                summary.style.color = 'black'; // Explicit black
+                summary.style.listStyle = 'none';
+                summary.style.color = 'black';
                 
-                // Webkit fix
                 const styleEl = document.createElement('style');
                 styleEl.textContent = 'summary::-webkit-details-marker { display: none; }';
                 document.head.appendChild(styleEl);
@@ -175,8 +163,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 secondaryContainer.style.display = 'flex';
                 secondaryContainer.style.flexWrap = 'wrap';
                 secondaryContainer.style.gap = '10px';
-                
-                // Floating dropdown style
                 secondaryContainer.style.position = 'absolute';
                 secondaryContainer.style.top = '100%';
                 secondaryContainer.style.left = '0';
@@ -221,6 +207,25 @@ document.addEventListener('DOMContentLoaded', function () {
 				eventBlock.style.display = this.checked ? 'block' : 'none'
                 promoteLabel.style.display = this.checked ? 'inline-block' : 'none'
                 if (typeof updateEventCounter === 'function') updateEventCounter();
+                
+                // Automatyczne dodawanie nowego wydarzenia
+                if (this.checked) {
+                	const allContainers = Array.from(block.querySelectorAll('.event-container'));
+                	
+                	// Sprawdź, czy to ostatnie pole i czy wszystkie poprzednie są zaznaczone
+                	const isLastEvent = container === allContainers[allContainers.length - 1];
+                	const allPreviousChecked = allContainers.slice(0, -1).every(c => {
+                		const cb = c.querySelector('.toggle-checkbox');
+                		return cb && cb.checked;
+                	});
+                	
+                	// Dodaj nowe pole tylko jeśli to ostatnie i wszystkie poprzednie są zaznaczone
+                	if (isLastEvent && allPreviousChecked) {
+                		const newIndex = allContainers.length;
+                		const newContainer = createEventContainer(block, newIndex);
+                		block.appendChild(newContainer);
+                	}
+                }
 			})
 
 			updateMiejscaOptions(selectMiasto.value)
@@ -231,11 +236,16 @@ document.addEventListener('DOMContentLoaded', function () {
 				selectMiejsce,
 				inputMiejsceInne,
 				inputLink,
-                styleBox,
-                opisInput
+                styleBox
 			)
 			container.append(toggle, eventBlock)
-			block.appendChild(container)
+			return container;
+		}
+
+		// Generuj 1 domyślne wydarzenie (kolejne dodają się dynamicznie)
+		for (let i = 0; i < 1; i++) {
+			const container = createEventContainer(block, i);
+			block.appendChild(container);
 		}
 		form.appendChild(block)
 	})

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dance Puls - Generator Zestawienia Imprez</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260205_v16">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕺</text></svg>">
 </head>
@@ -49,24 +49,20 @@
 
       <!-- Rząd 1: Linki zewnętrzne -->
       <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-        <button id="open-fb-links-btn"
-          style="flex: 1; background: #2196f3; color: white; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #1976d2; font-weight: bold;">
+        <button id="open-fb-links-btn" class="btn-primary" style="flex: 1; font-size: 0.8em; padding: 5px;">
           🌐 Otwórz zakładki
         </button>
-        <button id="open-ksh-btn"
-          style="flex: 1; background: #2196f3; color: white; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #1976d2; font-weight: bold;">
+        <button id="open-ksh-btn" class="btn-primary" style="flex: 1; font-size: 0.8em; padding: 5px;">
           🏠 Otwórz KSH
         </button>
       </div>
 
       <!-- Rząd 2: Narzędzia importu -->
       <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-        <button id="copy-scraper-btn"
-          style="flex: 1; background: #ffcc80; color: #333; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
+        <button id="copy-scraper-btn" class="btn-danger" style="flex: 1; font-size: 0.8em; padding: 5px;">
           📋 Kopiuj Skraper
         </button>
-        <button id="import-btn"
-          style="flex: 1; background: #2196f3; color: white; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #1976d2; font-weight: bold;"
+        <button id="import-btn" class="btn-primary" style="flex: 1; font-size: 0.8em; padding: 5px;"
           title="Próbuje zaimportować wydarzenia z danych w schowku">
           📥 Wklej i Importuj
         </button>
@@ -74,14 +70,12 @@
 
       <!-- Rząd 3: Czyszczenie i Reset -->
       <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-        <button id="reset-history-btn"
-          onclick="if(confirm('Na pewno wyczyścić historię zatwierdzonych zgłoszeń?')) { localStorage.removeItem('party_inbox_done'); location.reload(); }"
-          style="flex: 1; background: #2196f3; color: white; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #1976d2;">
+        <button id="reset-history-btn" class="btn-neutral" style="flex: 1; font-size: 0.75em; padding: 4px;"
+          onclick="if(confirm('Na pewno wyczyścić historię zatwierdzonych zgłoszeń?')) { localStorage.removeItem('party_inbox_done'); location.reload(); }">
           🗑️ Reset Historii
         </button>
-        <button
-          onclick="if(confirm('Na pewno wyczyścić cały formularz?')) { localStorage.removeItem('party_generator_stan'); location.reload(); }"
-          style="flex: 1; background: #2196f3; color: white; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #1976d2;">
+        <button class="btn-neutral" style="flex: 1; font-size: 0.75em; padding: 4px;"
+          onclick="if(confirm('Na pewno wyczyścić cały formularz?')) { localStorage.removeItem('party_generator_stan'); location.reload(); }">
           🧹 Wyczyść Formularz
         </button>
       </div>
@@ -226,7 +220,7 @@
   </footer>
 </body>
 
-<script type="module" src="js/app.js?v=20260205_v14"></script>
+<script type="module" src="js/app.js?v=20260205_v16"></script>
 
 </html>
 

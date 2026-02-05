@@ -1,11 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Lobster&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap');
 
+/* ========================================
+   VARIABLES & RESET
+   ======================================== */
 :root {
     /* 🇨🇺 Cuban Vibes Palette */
     --cuban-red: #D32F2F;        /* Vibrant Red */
     --cuban-blue: #0288D1;       /* Caribbean Blue */
     --cuban-teal: #009688;       /* Tropical Teal */
     --cuban-yellow: #FFC107;     /* Sun Gold */
+    --cuban-orange: #FF6F00;     /* Sunset Orange */
+    --cuban-green: #4CAF50;      /* Tropical Green */
     --cuban-cream: #FFF8E1;      /* Warm Sand Background */
     --cuban-white: #FFFFFF;
     
@@ -17,8 +22,12 @@
     
     --gradient-header: linear-gradient(135deg, var(--cuban-red), #B71C1C);
     --gradient-button: linear-gradient(45deg, var(--cuban-blue), var(--cuban-teal));
+    --gradient-orange: linear-gradient(135deg, var(--cuban-orange), #FFCA28);
 }
 
+/* ========================================
+   TYPOGRAPHY
+   ======================================== */
 body {
 	font-family: 'Open Sans', sans-serif;
 	max-width: 1600px;
@@ -29,12 +38,11 @@ body {
         radial-gradient(var(--cuban-yellow) 1px, transparent 1px);
     background-size: 50px 50px;
     background-position: 0 0, 25px 25px;
-    background-attachment: fixed; /* Parallax-ish */
+    background-attachment: fixed;
 	color: var(--text-primary);
 	padding: 20px;
 }
 
-/* --- HEADERS --- */
 h1, h2, h3 {
     font-family: 'Montserrat', sans-serif;
     color: var(--cuban-red);
@@ -44,7 +52,7 @@ h1, h2, h3 {
 }
 
 h2 {
-    font-family: 'Lobster', cursive; /* Cuban Flare */
+    font-family: 'Lobster', cursive;
     font-size: 3em;
     text-align: center;
     color: var(--cuban-blue);
@@ -60,7 +68,9 @@ h3 {
     color: var(--cuban-teal);
 }
 
-/* --- LAYOUT --- */
+/* ========================================
+   LAYOUT
+   ======================================== */
 .app-container {
     display: flex;
     gap: 25px;
@@ -83,7 +93,9 @@ h3 {
     overflow-y: auto;
 }
 
-/* --- CARDS & CONTAINERS --- */
+/* ========================================
+   COMPONENTS - Cards & Containers
+   ======================================== */
 .filters {
     background: var(--cuban-white);
     padding: 20px;
@@ -106,7 +118,6 @@ h3 {
     border: none;
     box-shadow: var(--card-shadow);
     position: relative;
-    /* overflow: hidden; */
 }
 
 .day-block::before {
@@ -115,6 +126,7 @@ h3 {
     top: 0; left: 0; right: 0;
     height: 6px;
     background: linear-gradient(90deg, var(--cuban-blue), var(--cuban-teal));
+    border-radius: 16px 16px 0 0;
 }
 
 .day-block h3 {
@@ -124,7 +136,6 @@ h3 {
     font-size: 1.4em;
 }
 
-/* --- EVENT ITEMS --- */
 .event-container {
     padding: 15px;
     border-radius: 12px;
@@ -148,7 +159,9 @@ h3 {
     border-left: 2px dashed #ddd;
 }
 
-/* --- INPUTS --- */
+/* ========================================
+   COMPONENTS - Forms & Inputs
+   ======================================== */
 input[type='text'], select, textarea {
     padding: 12px 15px;
     border: 2px solid #E0E0E0;
@@ -170,14 +183,16 @@ input[type='text']:focus, select:focus, textarea:focus {
 }
 
 textarea#wynik {
-    background: #263238; /* Dark Terminal theme for output */
+    background: #263238;
     color: #ECEFF1;
     border: none;
     font-family: 'Consolas', 'Monaco', monospace;
     line-height: 1.4;
 }
 
-/* --- BUTTONS --- */
+/* ========================================
+   COMPONENTS - Buttons
+   ======================================== */
 button {
     background: var(--gradient-button);
     color: white;
@@ -190,7 +205,7 @@ button {
     font-size: 0.85em;
     letter-spacing: 0.5px;
     box-shadow: 0 4px 10px rgba(0, 150, 136, 0.3);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 button:hover {
@@ -202,16 +217,55 @@ button:active {
     transform: translateY(-1px);
 }
 
-/* Specific Buttons */
+/* Button Variants */
+.btn-primary {
+    background: var(--gradient-button);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--cuban-red);
+    box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4);
+}
+
+.btn-warning {
+    background: var(--gradient-orange);
+    color: #3E2723;
+}
+
+.btn-neutral {
+    background: #CFD8DC;
+    color: #455A64;
+    box-shadow: none;
+}
+
+.btn-neutral:hover {
+    background: #B0BEC5;
+    color: #263238;
+}
+
+/* Specific Button IDs */
 #import-btn { 
-    background: linear-gradient(135deg, #FF6F00, #FFCA28); /* Orange/Amber */
+    background: var(--gradient-orange);
     color: #3E2723;
     width: 100%; 
     font-size: 1em;
 }
 
-#reset-history-btn { background: #CFD8DC; color: #455A64; box-shadow: none; }
-#reset-history-btn:hover { background: #B0BEC5; color: #263238; }
+#reset-history-btn { 
+    background: #CFD8DC; 
+    color: #455A64; 
+    box-shadow: none; 
+}
+
+#reset-history-btn:hover { 
+    background: #B0BEC5; 
+    color: #263238; 
+}
 
 #copy-scraper-btn { 
     background: var(--cuban-red); 
@@ -223,7 +277,24 @@ button:active {
     font-size: 0.8em;
 }
 
-/* --- POLL BUTTONS (Right Column) --- */
+#help-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: var(--cuban-blue);
+    font-size: 0.8em;
+    padding: 8px 15px;
+    width: auto;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+#help-btn:hover {
+    transform: scale(1.05);
+    background: var(--cuban-teal);
+}
+
+/* Poll Buttons (Right Column) */
 #kopiuj-ankiete-container button {
     display: block;
     width: 100%;
@@ -243,7 +314,18 @@ button:active {
     background: #E1F5FE;
 }
 
-/* --- CHECKBOXES --- */
+.clicked-poll {
+    background: #DCEDC8 !important;
+    color: #33691E !important;
+    border-color: #AED581 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 1;
+}
+
+/* ========================================
+   COMPONENTS - Checkboxes
+   ======================================== */
 .checkboxes label {
     background: #FFF;
     border: 1px solid #E0E0E0;
@@ -262,67 +344,11 @@ button:active {
     background: #E0F2F1;
 }
 
-.checkboxes input:checked + span { /* If we wrapped text in span, otherwise just parent logic via JS? CSS cannot style parent yet without :has */
-    /* Assuming standard checkbox */
-}
-
-/* Highlight checked styles hack if possible, but basic is fine */
-
-/* --- SCROLLBAR --- */
-::-webkit-scrollbar {
-    width: 10px;
-}
-::-webkit-scrollbar-track {
-    background: #f1f1f1; 
-}
-::-webkit-scrollbar-thumb {
-    background: #B0BEC5; 
-    border-radius: 5px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: var(--cuban-blue); 
-}
-
-/* --- RESPONSIVE --- */
-@media (max-width: 1100px) {
-    .app-container { flex-direction: column; }
-    .col-left, .col-middle, .col-right { width: 100%; flex: none; }
-    .sticky-col { position: static; max-height: none; }
-}
-
-.clicked-poll {
-    background: #DCEDC8 !important; /* Light Green */
-    color: #33691E !important; /* Dark Green */
-    border-color: #AED581 !important;
-    box-shadow: none !important;
-    transform: none !important;
-    opacity: 1;
-}
-
-/* --- HELP BUTTON (Static) --- */
-#help-btn {
-    position: absolute;
-    right: 0;
-    top: 0;
-    background: var(--cuban-blue);
-    font-size: 0.8em;
-    padding: 8px 15px;
-    /* Resetting animation props if any were inherited */
-    width: auto;
-    display: inline-block;
-    transition: transform 0.2s; /* Subtle hover effect only */
-}
-
-#help-btn:hover {
-    transform: scale(1.05); /* Minimal scaling */
-    background: var(--cuban-teal);
-    width: auto;
-    padding-right: 15px;
-}
-
-/* --- HELP MODAL (Smooth Transition) --- */
-#help-modal { /* Using ID specific styles to match JS */
-    display: none; /* JS handles display: flex/none */
+/* ========================================
+   MODALS
+   ======================================== */
+.modal {
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -331,24 +357,20 @@ button:active {
     height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.6);
-    
-    /* Transition props */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.4s ease, visibility 0.4s;
-    
-    /* Layout */
-    justify-content: center;
-    align-items: center;
 }
 
-#help-modal.open {
+.modal.open {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     opacity: 1;
     visibility: visible;
 }
 
-#help-modal .modal-content {
-    /* Style content */
+.modal-content {
     background-color: #fefefe;
     padding: 20px;
     border: 1px solid #888;
@@ -356,13 +378,12 @@ button:active {
     max-width: 600px;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    
-    /* Entrance Animation */
+    position: relative;
     transform: translateY(-20px);
     transition: transform 0.4s ease;
 }
 
-#help-modal.open .modal-content {
+.modal.open .modal-content {
     transform: translateY(0);
 }
 
@@ -381,17 +402,17 @@ button:active {
     cursor: pointer;
 }
 
-/* --- MOBILE WARNING MODAL (Glassmorphism) --- */
+/* Mobile Warning Modal (Glassmorphism) */
 #mobile-warning-modal {
-    display: none; /* Hidden by default, JS will show */
+    display: none;
     position: fixed;
     z-index: 9999;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Backdrop dim */
-    backdrop-filter: blur(8px); /* Nice blur */
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
     justify-content: center;
     align-items: center;
     padding: 20px;
@@ -449,6 +470,27 @@ button:active {
     transform: scale(1.05);
 }
 
+/* ========================================
+   UTILITIES
+   ======================================== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+
+::-webkit-scrollbar-thumb {
+    background: #B0BEC5; 
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--cuban-blue); 
+}
+
+/* Animations */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -459,63 +501,11 @@ button:active {
     to { transform: translateY(0); opacity: 1; }
 }
 
-/* --- HELP MODAL (Smooth Transition) --- */
-.modal {
-    display: none; /* Default state */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.6); /* Backdrop */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.4s ease, visibility 0.4s;
-}
-
-.modal.open {
-    display: block; /* Ensure it's in layout */
-    opacity: 1;
-    visibility: visible;
-}
-
-.modalUI { /* JS will toggle this */
-    display: flex !important; /* Force flex for centering */
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    position: relative;
-    transform: translateY(-20px);
-    transition: transform 0.4s ease;
-}
-
-.modal.open .modal-content {
-    transform: translateY(0);
-}
-
-.close-modal {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close-modal:hover,
-.close-modal:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1100px) {
+    .app-container { flex-direction: column; }
+    .col-left, .col-middle, .col-right { width: 100%; flex: none; }
+    .sticky-col { position: static; max-height: none; }
 }
