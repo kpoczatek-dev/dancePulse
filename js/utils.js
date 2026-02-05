@@ -1,16 +1,32 @@
-
+/**
+ * Formatuje obiekt Date na ciąg znaków DD.MM
+ * @param {Date} date - Obiekt daty do sformatowania
+ * @returns {string} Sformatowana data (np. "05.02")
+ */
 export function formatujDatePL(date) {
     const d = date.getDate().toString().padStart(2, '0')
     const m = (date.getMonth() + 1).toString().padStart(2, '0')
     return `${d}.${m}`
 }
 
+/**
+ * Dodaje określoną liczbę dni do podanej daty
+ * @param {Date|string} date - Data wejściowa
+ * @param {number} ile - Liczba dni do dodania
+ * @returns {Date} Nowy obiekt Date
+ */
 export function dodajDni(date, ile) {
     const d = new Date(date)
     d.setDate(d.getDate() + ile)
     return d
 }
 
+/**
+ * Generuje listę obiektów reprezentujących kolejne dni, zaczynając od jutra
+ * @param {number} ileDni - Ile dni wygenerować
+ * @param {string[]} dniTygodnia - Nazwy dni tygodnia (z configu)
+ * @returns {Object[]} Tablica obiektów {date, label, dzienTygIndex}
+ */
 export function generujDniOdJutra(ileDni, dniTygodnia) {
     const dzis = new Date()
     const start = dodajDni(dzis, 1) // Start from tomorrow
@@ -27,6 +43,12 @@ export function generujDniOdJutra(ileDni, dniTygodnia) {
     return result
 }
 
+/**
+ * Główny parser daty. Rozpoznaje formaty FB, relatywne ("dzisiaj"), 
+ * formaty z kropką, ukośnikiem oraz nazwy miesięcy.
+ * @param {string} text - Tekst zawierający datę
+ * @returns {Date|null} Obiekt Date lub null, jeśli nie rozpoznano
+ */
 export function parsujDateFB(text) {
     if (!text) return null;
     text = text.toUpperCase();
@@ -78,14 +100,21 @@ export function parsujDateFB(text) {
         return new Date(year, monthIndex, day);
     }
 
-    // 2. Dot Format: "31.01"
-    const regexDot = /(\d{1,2})\.(\d{1,2})/;
+    // 2. Dot Format: "31.01", "31.01.2024", "31/01/2024"
+    const regexDot = /(\d{1,2})[./](\d{1,2})(?:\.(\d{2,4}))?/;
     const matchDot = text.match(regexDot);
     if (matchDot) {
         const day = parseInt(matchDot[1], 10);
         const monthIndex = parseInt(matchDot[2], 10) - 1;
         let year = currentYear;
-        if (monthIndex < now.getMonth() - 2) year++;
+        
+        if (matchDot[3]) {
+            year = parseInt(matchDot[3], 10);
+            if (year < 100) year += 2000; // Obsługa "24" jako "2024"
+        } else {
+            // Jeśli nie podano roku, używamy logiki rolowania (ale ostrożnie)
+            if (monthIndex < now.getMonth() - 2) year++;
+        }
         return new Date(year, monthIndex, day);
     }
 

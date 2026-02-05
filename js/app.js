@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnCopyScraper.addEventListener('click', () => {
              // ALWAYS FETCH NEW to avoid stale cache issues when I update the file
              // window.scraperScriptCache check REMOVED
-             fetch('fb_scraper.js?v=' + new Date().getTime()).then(r=>r.text()).then(t => {
+             fetch('tools/fb_scraper.js?v=' + new Date().getTime()).then(r=>r.text()).then(t => {
                  window.scraperScriptCache = t; 
                  navigator.clipboard.writeText(t).then(() => alert('Nowy skrypt (JSON-LD) skopiowany!'));
              });
@@ -333,6 +333,10 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // --- AUTOSAVE & LIVE PREVIEW ---
 
+    /**
+     * Serializuje bieżący stan formularza i zapisuje go w localStorage.
+     * Automatycznie wywołuje generowanie posta.
+     */
     function zapiszStan() {
         const stan = [];
         const blocks = document.querySelectorAll('.day-block');
@@ -383,6 +387,10 @@ document.addEventListener('DOMContentLoaded', function () {
         generujPost(); // Przy okazji generuj wynik
     }
 
+    /**
+     * Wczytuje stan formularza z localStorage i przywraca wartości pól.
+     * Obsługuje dynamiczne pokazywanie/ukrywanie sekcji "Inne".
+     */
     function wczytajStan() {
         const saved = localStorage.getItem('party_generator_stan');
         if (!saved) return;
@@ -479,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // PRE-FETCH SCRAPER SCRIPT FOR CLIPBOARD
     window.scraperScriptCache = '';
-    fetch('fb_scraper.js')
+    fetch('tools/fb_scraper.js')
         .then(r => r.text())
         .then(text => {
             window.scraperScriptCache = text;
@@ -500,6 +508,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let lastClipboardContent = '';
 
+    /**
+     * Próbuje odczytać dane ze schowka i zaimportować wydarzenia FB.
+     * Wykorzystuje parser.js do walidacji i deduplikacji danych.
+     * @param {boolean} silent - Czy pomijać komunikaty o błędach (np. przy auto-paste)
+     */
     async function importujZFacebooka(silent = false) {
         let jsonText;
         try {
@@ -636,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (window.scraperScriptCache) {
                     navigator.clipboard.writeText(window.scraperScriptCache);
                 } else {
-                    fetch('fb_scraper.js').then(r=>r.text()).then(t=>navigator.clipboard.writeText(t));
+                    fetch('tools/fb_scraper.js').then(r=>r.text()).then(t=>navigator.clipboard.writeText(t));
                 }
 
             } else {
@@ -808,7 +821,31 @@ function initInbox() {
                     
                     if (linkIndex !== -1) {
                         const link = cleanCols[linkIndex];
-                        const date = cleanCols[0]; // Timestamp or Date is usually first column
+                        const timestampStr = cleanCols[0];
+                        
+                        // Próba odfiltrowania starych wydarzeń - szukamy daty w każdej kolumnie
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        
+                        let bestFoundDate = null;
+                        let shouldSkip = false;
+
+                        for (const cell of cleanCols) {
+                            const d = parsujDateFB(cell);
+                            if (d) {
+                                // Jeśli jakakolwiek data w rekordzie jest z przeszłości - flagujemy jako "stare"
+                                if (d < today) {
+                                    shouldSkip = true;
+                                    break;
+                                }
+                                // Zapamiętujemy najlepszą (najwcześniejszą przyszłą?) datę do wyświetlenia
+                                if (!bestFoundDate || d < bestFoundDate) {
+                                    bestFoundDate = d;
+                                }
+                            }
+                        }
+
+                        if (shouldSkip) continue;
                         
                         // Collect other info (skip Timestamp [0] and Link)
                         const extraInfo = cleanCols
@@ -816,7 +853,9 @@ function initInbox() {
                             .join(' | ');
 
                         if (!processed.includes(link)) {
-                            pendingItems.push({ date, link, info: extraInfo });
+                            // Wyświetlamy datę wydarzenia jeśli znaleziono, inaczej timestamp
+                            const displayDate = bestFoundDate ? formatujDatePL(bestFoundDate) : timestampStr;
+                            pendingItems.push({ date: displayDate, link, info: extraInfo });
                         }
                     }
                 }
@@ -866,8 +905,8 @@ function initInbox() {
             headerDiv.style.fontWeight = 'bold';
             headerDiv.style.color = '#333';
             headerDiv.style.marginBottom = '6px';
-            // Fallback if date is missing (for now)
-            div.appendChild(headerDiv); // Placeholder context
+            headerDiv.textContent = item.date || 'Brak daty';
+            div.appendChild(headerDiv);
 
             const contentDiv = document.createElement('div');
             contentDiv.style.marginBottom = '8px';
@@ -984,6 +1023,10 @@ function kopiujTytul() {
     alert('Tytuł skopiowany!');
 }
 
+/**
+ * Główna funkcja generująca treść posta oraz przyciski ankiety.
+ * Zbiera dane ze wszystkich aktywnych bloków dni i wydarzeń.
+ */
 function generujPost() {
     updateTitle();
 	const blocks = document.querySelectorAll('.day-block')

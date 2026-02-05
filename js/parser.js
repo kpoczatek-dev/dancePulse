@@ -1,10 +1,10 @@
 import { parsujDateFB, formatujDatePL } from './utils.js';
 
 /**
- * Parses raw JSON text from clipboard and returns valid event objects.
- * Applies sorting (by date) and basic validation.
- * @param {string} jsonText 
- * @returns {Object} { uniqueEvents: [], skippedReasons: [] }
+ * Parsuje surowy tekst JSON ze schowka i zwraca poprawne obiekty wydarzeń.
+ * Przeprowadza deduplikację, walidację dat (zakres 14 dni) oraz sortowanie.
+ * @param {string} jsonText - Tekst JSON skopiowany przez skraper
+ * @returns {Object} Obiekt zawierający { events: [], skippedReasons: [] }
  */
 export function parseClipboardData(jsonText) {
     const today = new Date();
