@@ -1,7 +1,7 @@
-import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v6';
-import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v6';
-import { initWeather } from './weather.js?v=20260205_v6';
-import { parseClipboardData } from './parser.js?v=20260205_v6';
+import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v13';
+import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v13';
+import { initWeather } from './weather.js?v=20260205_v13';
+import { parseClipboardData } from './parser.js?v=20260205_v13';
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("[DancePuls] Inicjalizacja wersji 20260205...");
@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             container.addEventListener('dragend', () => {
                 container.classList.remove('dragging')
+                generujPost(); // Refresh post after reordering
             })
 
 			const checkbox = document.createElement('input')
@@ -626,11 +627,33 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         let bestCity = 'Katowice'; 
                         let bestPlace = null;
-                        const fullText = ((ev.location||'') + ' ' + (ev.title||'') + ' ' + (ev.description||'')).toLowerCase();
                         
+                        // PRIORYTETYZACJA: Najpierw sprawdzamy tytuł i opis, bo location z FB często jest błędne (np. Gliwice w Sabrosie)
+                        const primaryText = ((ev.title||'') + ' ' + (ev.description||'')).toLowerCase();
+                        const locationText = (ev.location||'').toLowerCase();
+                        const fullText = (primaryText + ' ' + locationText);
+                        
+                        let matchedAddr = null;
                         for (const [addr, place] of Object.entries(adresyMap || {})) {
-                             if (fullText.includes(addr)) { bestPlace = place; break; }
+                             // Sprawdzamy najpierw w tytule/opisie
+                             if (primaryText.includes(addr)) { 
+                                 bestPlace = place; 
+                                 matchedAddr = addr;
+                                 break; 
+                             }
                         }
+                        
+                        // Jeśli nie ma w opisie, sprawdzamy pole location
+                        if (!bestPlace) {
+                            for (const [addr, place] of Object.entries(adresyMap || {})) {
+                                if (locationText.includes(addr)) { 
+                                    bestPlace = place; 
+                                    matchedAddr = addr;
+                                    break; 
+                                }
+                            }
+                        }
+
                         if (!bestPlace) {
                              for (const city of Object.keys(miejscaWgMiasta || {})) {
                                  if (fullText.includes(city.toLowerCase())) {
@@ -643,8 +666,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                  }
                              }
                         } else {
-                            for (const [city, places] of Object.entries(miejscaWgMiasta || {})) {
-                                if (places.includes(bestPlace)) { bestCity = city; break; }
+                            // Jeśli mamy bestPlace, ustalmy miasto. 
+                            // 1. Sprawdźmy czy adres ma przypisane sztywne miasto
+                            if (matchedAddr && adresMiastoSztywne[matchedAddr]) {
+                                bestCity = adresMiastoSztywne[matchedAddr];
+                            } else {
+                                // 2. Fallback: szukaj miasta, które ma to miejsce (może być błędne dla Mohito, jeśli nie ma w adresMiastoSztywne)
+                                for (const [city, places] of Object.entries(miejscaWgMiasta || {})) {
+                                    if (places.includes(bestPlace)) { 
+                                        bestCity = city; 
+                                        break; 
+                                    }
+                                }
                             }
                         }
                         
@@ -681,8 +714,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 zapiszStan();
                 generujPost();
                 
-                // Odśwież cache skrapera w schowku (dla wygody)
-                if (window.scraperScriptCache) navigator.clipboard.writeText(window.scraperScriptCache);
+                // USUNIĘTO: Automatyczne nadpisywanie schowka skraperem (mogło mylić użytkownika)
+                // if (window.scraperScriptCache) navigator.clipboard.writeText(window.scraperScriptCache);
 
             } else if (!silent) {
                 let msg = '❌ Nie zaimportowano żadnych nowych wydarzeń.';
@@ -1010,6 +1043,16 @@ function initInbox() {
 
 // --- HELPERS TYTUŁOWE ---
 
+function toBoldUnicode(text) {
+    const chars = {
+        'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦', 'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳',
+        'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌', 'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
+        'ą': '𝐚̨', 'ć': '𝐜́', 'ę': '𝐞̨', 'ł': 'ł', 'ń': '𝐧́', 'ó': '𝐨́', 'ś': '𝐬́', 'ź': '𝐳́', 'ż': '𝐳̇',
+        'Ą': '𝐀̨', 'Ć': '𝐂́', 'Ę': '𝐄̨', 'Ł': 'Ł', 'Ń': '𝐍́', 'Ó': '𝐎́', 'Ś': '𝐒́', 'Ź': '𝐙́', 'Ż': '𝐙̇'
+    };
+    return text.split('').map(c => chars[c] || c).join('');
+}
+
 function getWeekNumber(d) {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -1018,40 +1061,54 @@ function getWeekNumber(d) {
     return weekNo;
 }
 
-function updateTitle() {
+function getTitleString() {
     const today = new Date();
     if (today.getDay() === 0) {
         today.setDate(today.getDate() + 1); // Jeśli Niedziela, liczymy dla Poniedziałku
     }
     
-    // Ustal datę docelową (zazwyczaj bierze się datę "następnego" początku tygodnia jeśli jesteśmy na końcu)
-    // Założenie: Generujemy post dla nadchodzącego tygodnia.
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 1); 
     
     const weekNum = getWeekNumber(targetDate);
     
-    // Odmienianie "tydzień" ? Nie, "na tydzień X".
-    let weekString = weekNum.toString();
-    // Opcjonalnie słownie dla małych liczb? Nie, "tydzień 5" jest OK. 
-    // User chciał "tydzień czwarty".
-    // 1 -> pierwszy, 2 -> drugi...
     const liczebniki = ["zerowy", "pierwszy", "drugi", "trzeci", "czwarty", "piąty", "szósty", "siódmy", "ósmy", "dziewiąty", "dziesiąty",
                         "jedenasty", "dwunasty", "trzynasty", "czternasty", "piętnasty"];
     
     let numerTekst = weekNum;
-    if (weekNum < liczebniki.length) numerTekst = liczebniki[weekNum];
+    if (weekNum < (liczebniki.length || 0)) numerTekst = liczebniki[weekNum];
 
-    const title = `🎉 Zestawienie imprezowe na tydzień ${numerTekst}`;
-    
+    const title = `Zestawienie imprezowe na tydzień ${numerTekst}`;
+    return `🎉 ${toBoldUnicode(title)}`;
+}
+
+function updateTitle() {
+    // Funkcja zachowana dla kompatybilności wstecznej, 
+    // choć pole post-title zostało usunięte z HTML
+    const title = getTitleString();
     const titleInput = document.getElementById('post-title');
     if (titleInput) titleInput.value = title;
 }
 
 function kopiujTytul() {
-    const titleVal = document.getElementById('post-title').value;
-    navigator.clipboard.writeText(titleVal);
-    alert('Tytuł skopiowany!');
+    const titleVal = getTitleString();
+    const hashtagi = document.getElementById('hashtagi').value;
+    
+    const extraText = `
+
+🗓️ PIĄTEK
+
+🗓️ SOBOTA
+
+🗓️ NIEDZIELA
+
+
+linki w komentarzu
+
+${hashtagi}`;
+
+    navigator.clipboard.writeText(titleVal + extraText);
+    alert('Szkielet zestawienia skopiowany!');
 }
 
 /**
@@ -1167,7 +1224,10 @@ function generujPost() {
 function kopiujWynik() {
 	const text = document.getElementById('wynik').value
 	navigator.clipboard.writeText(text)
-	alert('Skopiowano cały post!')
+	alert('Podsumowanie do komentarza skopiowane!');
 }
 
-// Weather init moved to DOMContentLoaded
+// Eksportujemy funkcje do window, aby były dostępne w HTML onclick
+window.kopiujTytul = kopiujTytul;
+window.kopiujWynik = kopiujWynik;
+window.generujPost = generujPost;

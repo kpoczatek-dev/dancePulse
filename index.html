@@ -88,13 +88,13 @@
 
     <!-- MIDDLE COLUMN: Post Content (Sticky) -->
     <div class="col-middle sticky-col">
-      <h3>📝 Tytuł posta:</h3>
-      <div style="display: flex; gap: 5px; margin-bottom: 20px;">
-        <input id="post-title" type="text" style="flex-grow: 1; padding: 5px;" readonly>
-        <button onclick="kopiujTytul()">📋 Kopiuj tytuł</button>
+      <div style="margin-bottom: 20px;">
+        <button onclick="kopiujTytul()"
+          style="width: 100%; padding: 10px; font-weight: bold; background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9;">📋
+          KOPIUJ SZKIELET ZESTAWIENIA DO POSTA FB</button>
       </div>
 
-      <h3>📋 Wygenerowany post:</h3>
+      <h3>📋 Podsumowanie:</h3>
       <textarea id="wynik" rows="25"
         style="width: 100%; font-family: monospace; font-size: 0.9em; white-space: pre-wrap; margin-bottom: 5px;"></textarea>
 
@@ -104,10 +104,11 @@
 
       <div style="margin-bottom: 10px; margin-top: 10px;">
         <label>Hashtagi (doklejają się na końcu):</label><br>
-        <input id="hashtagi" style="width: 100%;" value="#Salsa #Bachata #Kizomba #Taniec #Silesia">
+        <input id="hashtagi" style="width: 100%;" value="#Salsa #Bachata #Kizomba #Taniec #Silesia #Katowice">
       </div>
 
-      <button onclick="kopiujWynik()" style="width: 100%; margin-bottom: 20px;">📋 Kopiuj cały post</button>
+      <button onclick="kopiujWynik()" style="width: 100%; margin-bottom: 20px;">📋 KOPIUJ PODSUMOWANIE DO KOMENTARZA NA
+        FB</button>
     </div>
 
     <!-- RIGHT COLUMN: Poll Buttons (Sticky) -->
@@ -213,7 +214,7 @@
   </footer>
 </body>
 
-<script type="module" src="js/app.js?v=20260205_v6"></script>
+<script type="module" src="js/app.js?v=20260205_v13"></script>
 
 </html>
 
