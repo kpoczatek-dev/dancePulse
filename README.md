@@ -43,10 +43,25 @@ Kompleksowe narzędzie do szybkiego tworzenia postów z zestawieniami imprez tan
 2. Kliknij **🔄 Sprawdź**, aby pobrać nowe zgłoszenia.
 3. System automatycznie pominie stare wydarzenia. Kliknij **Zatwierdź**, aby przenieść zgłoszenie na główne listy.
 
-### 3. Generowanie i Kopiowanie
-- Zaznacz interesujące Cię wydarzenia.
-- Uzupełnij ewentualne braki (miasto, styl).
-- Skopiuj gotowy tekst przyciskiem **📋 Kopiuj cały post**.
+### 3. Generowanie Posta na FB (Nowy Workflow)
+Generator wykorzystuje dwuetapowy proces publikacji, zgodny z najlepszymi praktykami FB:
+
+**Krok 1: Szkielet Zestawienia (Post główny)**
+- Kliknij **📋 KOPIUJ SZKIELET ZESTAWIENIA DO POSTA FB**
+- Kopiuje: pogrubiony tytuł tygodnia, nagłówki dni (Piątek-Niedziela), info "linki w komentarzu" oraz hashtagi
+- Wklej jako główny post na FB
+
+**Krok 2: Podsumowanie (Komentarz)**
+- Kliknij **📋 KOPIUJ PODSUMOWANIE DO KOMENTARZA NA FB**
+- Kopiuje: szczegółową listę wszystkich imprez z linkami
+- Wklej w pierwszym komentarzu pod postem
+
+💡 **Dlaczego dwa kroki?** Facebook lepiej promuje posty z krótkimi nagłówkami i linkami umieszczonymi w komentarzach (lepsze zasięgi organiczne).
+
+### 4. Dodatkowe Funkcje
+- **🌐 Otwórz zakładki**: Automatycznie otwiera wszystkie strony FB z wydarzeniami (skonfigurowane w `config.js`)
+- **🔢 Szybka Ankieta**: Generuje gotowe opcje do ankiet FB (prawa kolumna)
+- **Drag & Drop**: Przeciągaj wydarzenia, aby zmienić kolejność w podsumowaniu
 
 ## ⚙️ Konfiguracja
 

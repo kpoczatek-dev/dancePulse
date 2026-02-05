@@ -1,7 +1,7 @@
-import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v13';
-import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v13';
-import { initWeather } from './weather.js?v=20260205_v13';
-import { parseClipboardData } from './parser.js?v=20260205_v13';
+import { LICZBA_DNI, miejscaWgMiasta, style, dniTygodnia, adresyMap, adresMiastoSztywne, styleKeywords, FB_QUICK_LINKS } from './config.js?v=20260205_v14';
+import { parsujDateFB, formatujDatePL, toYMD, dodajDni, generujDniOdJutra } from './utils.js?v=20260205_v14';
+import { initWeather } from './weather.js?v=20260205_v14';
+import { parseClipboardData } from './parser.js?v=20260205_v14';
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("[DancePuls] Inicjalizacja wersji 20260205...");

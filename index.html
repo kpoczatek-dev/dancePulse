@@ -18,6 +18,9 @@
     </div>
     <h2 style="display: inline-block;">🕺Dance Puls - Generator</h2>
     <button id="help-btn">❓ Pomoc</button>
+    <a href="https://twojastronawww.pl/" target="_blank"
+      style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 0.75em; color: #666; text-decoration: none; opacity: 0.7; transition: opacity 0.2s;"
+      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">by TwojaStronaWWW</a>
   </div>
 
 
@@ -47,11 +50,11 @@
       <!-- Rząd 1: Linki zewnętrzne -->
       <div style="display: flex; gap: 5px; margin-bottom: 5px;">
         <button id="open-fb-links-btn"
-          style="flex: 1; background: #b3e5fc; color: #01579b; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
-          🌐 Otwórz FB
+          style="flex: 1; background: #2196f3; color: white; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #1976d2; font-weight: bold;">
+          🌐 Otwórz zakładki
         </button>
         <button id="open-ksh-btn"
-          style="flex: 1; background: #b3e5fc; color: #01579b; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;">
+          style="flex: 1; background: #2196f3; color: white; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #1976d2; font-weight: bold;">
           🏠 Otwórz KSH
         </button>
       </div>
@@ -63,7 +66,7 @@
           📋 Kopiuj Skraper
         </button>
         <button id="import-btn"
-          style="flex: 1; background: #c8e6c9; color: #2e7d32; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold;"
+          style="flex: 1; background: #2196f3; color: white; font-size: 0.8em; padding: 5px; cursor: pointer; border: 1px solid #1976d2; font-weight: bold;"
           title="Próbuje zaimportować wydarzenia z danych w schowku">
           📥 Wklej i Importuj
         </button>
@@ -73,12 +76,12 @@
       <div style="display: flex; gap: 5px; margin-bottom: 15px;">
         <button id="reset-history-btn"
           onclick="if(confirm('Na pewno wyczyścić historię zatwierdzonych zgłoszeń?')) { localStorage.removeItem('party_inbox_done'); location.reload(); }"
-          style="flex: 1; background: #f5f5f5; color: #666; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #ccc;">
+          style="flex: 1; background: #2196f3; color: white; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #1976d2;">
           🗑️ Reset Historii
         </button>
         <button
           onclick="if(confirm('Na pewno wyczyścić cały formularz?')) { localStorage.removeItem('party_generator_stan'); location.reload(); }"
-          style="flex: 1; background: #f5f5f5; color: #666; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #ccc;">
+          style="flex: 1; background: #2196f3; color: white; font-size: 0.75em; padding: 4px; cursor: pointer; border: 1px solid #1976d2;">
           🧹 Wyczyść Formularz
         </button>
       </div>
@@ -90,7 +93,7 @@
     <div class="col-middle sticky-col">
       <div style="margin-bottom: 20px;">
         <button onclick="kopiujTytul()"
-          style="width: 100%; padding: 10px; font-weight: bold; background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9;">📋
+          style="width: 100%; padding: 10px; font-weight: bold; background: #2196f3; color: white; border: 1px solid #1976d2;">📋
           KOPIUJ SZKIELET ZESTAWIENIA DO POSTA FB</button>
       </div>
 
@@ -107,8 +110,9 @@
         <input id="hashtagi" style="width: 100%;" value="#Salsa #Bachata #Kizomba #Taniec #Silesia #Katowice">
       </div>
 
-      <button onclick="kopiujWynik()" style="width: 100%; margin-bottom: 20px;">📋 KOPIUJ PODSUMOWANIE DO KOMENTARZA NA
-        FB</button>
+      <button onclick="kopiujWynik()"
+        style="width: 100%; margin-bottom: 20px; padding: 10px; font-weight: bold; background: #2196f3; color: white; border: 1px solid #1976d2;">📋
+        KOPIUJ PODSUMOWANIE DO KOMENTARZA NA FB</button>
     </div>
 
     <!-- RIGHT COLUMN: Poll Buttons (Sticky) -->
@@ -157,9 +161,17 @@
         </div>
 
         <div class="instruction-step">
-          <h3>4. Generowanie Posta</h3>
-          <p>Post generuje się na żywo w środkowej kolumnie. Gdy skończysz, kliknij <strong>📋 Kopiuj cały post</strong>
-            i wklej go na Facebooka!</p>
+          <h3>4. Generowanie Posta na FB</h3>
+          <p>Generator działa w dwóch krokach, zgodnie z najlepszymi praktykami FB:</p>
+          <ol>
+            <li><strong>📋 KOPIUJ SZKIELET ZESTAWIENIA DO POSTA FB</strong> - Kopiuje pogrubiony tytuł tygodnia,
+              nagłówki dni (Piątek-Niedziela), info "linki w komentarzu" oraz hashtagi. To wklejasz jako główny post.
+            </li>
+            <li><strong>📋 KOPIUJ PODSUMOWANIE DO KOMENTARZA NA FB</strong> - Kopiuje szczegółową listę wszystkich
+              imprez z linkami. To wklejasz w pierwszym komentarzu pod postem (lepsze zasięgi!).</li>
+          </ol>
+          <p><em>💡 Dlaczego dwa przyciski? Facebook lepiej promuje posty z krótkimi nagłówkami i linkami w
+              komentarzach.</em></p>
         </div>
 
         <div class="instruction-step">
@@ -209,12 +221,12 @@
   </div>
 
   <footer style="text-align: center; padding: 20px; color: #666; font-size: 0.85em;">
-    zrobione przez <a href="https://twojastronawww.pl/" target="_blank"
+    Stworzone przez <a href="https://twojastronawww.pl/" target="_blank"
       style="color: #2196f3; text-decoration: none; font-weight: bold;">TwojaStronaWWW</a>
   </footer>
 </body>
 
-<script type="module" src="js/app.js?v=20260205_v13"></script>
+<script type="module" src="js/app.js?v=20260205_v14"></script>
 
 </html>
 
