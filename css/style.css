@@ -159,6 +159,33 @@ h3 {
     border-left: 2px dashed #ddd;
 }
 
+.event-header-content {
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.event-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.style-details summary::-webkit-details-marker { 
+    display: none; 
+}
+
+.style-details summary {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    line-height: 1;
+}
+
+.style-details[open] summary {
+    transform: rotate(90deg);
+}
+
 /* ========================================
    COMPONENTS - Forms & Inputs
    ======================================== */
@@ -342,6 +369,18 @@ button:active {
     border-color: var(--cuban-teal);
     color: var(--cuban-teal);
     background: #E0F2F1;
+}
+
+.event-header-content .checkboxes {
+    margin-left: auto;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.event-header-content .checkboxes label {
+    padding: 3px 8px;
+    font-size: 0.75em;
 }
 
 /* ========================================

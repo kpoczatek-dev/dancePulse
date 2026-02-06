@@ -29,10 +29,10 @@ export const miejscaWgMiasta = {
 
 export const style = [
     'Cubana',
-    'Salsa',
     'Bachata',
-    // Secondary (rozwijane)
     'Kizomba',
+    // Secondary (rozwijane)
+    'Salsa',
     'Linia',
     'Rumba',
     'Afro',

@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
             promoteLabel.style.marginRight = '5px';
             promoteLabel.style.display = 'none';
 			promoteLabel.appendChild(promoteInput)
-			promoteLabel.append(' ⭐')
+			promoteLabel.append(' Promuj ⭐')
             
             promoteLabel.addEventListener('click', function(e) { e.stopPropagation(); });
 
@@ -90,10 +90,22 @@ document.addEventListener('DOMContentLoaded', function () {
             toggle.style.display = 'flex';
             toggle.style.alignItems = 'center';
             toggle.style.cursor = 'pointer';
+            toggle.style.flex = '1';
+
+			const headerContent = document.createElement('div')
+			headerContent.className = 'event-header-content'
+            headerContent.style.display = 'flex';
+            headerContent.style.alignItems = 'center';
+            headerContent.style.flex = '1';
+
+			const labelText = document.createElement('span')
+			labelText.textContent = ` Pozycja ${index + 1} `
+			labelText.style.marginRight = '5px'
 
 			toggle.appendChild(checkbox)
-			toggle.append(` Wydarzenie taneczne ${index + 1} `) 
-            toggle.appendChild(promoteLabel)
+			headerContent.appendChild(labelText)
+			headerContent.appendChild(promoteLabel)
+			toggle.appendChild(headerContent)
 
 			const eventBlock = document.createElement('div')
 			eventBlock.className = 'event-block'
@@ -136,36 +148,37 @@ document.addEventListener('DOMContentLoaded', function () {
 				.join('');
             
             styleBox.innerHTML = primaryHtml;
+            
+            // Powstrzymaj propagację kliknięcia w style, żeby nie zwijać eventu
+            styleBox.addEventListener('click', e => e.stopPropagation());
 
             if (secondaryStyles.length > 0) {
                 const details = document.createElement('details');
+                details.className = 'style-details';
                 details.style.display = 'inline-block';
                 details.style.verticalAlign = 'middle';
                 details.style.marginLeft = '10px'; 
                 details.style.position = 'relative';
 
                 const summary = document.createElement('summary');
-                summary.textContent = '▼';
+                summary.textContent = '▸';
                 summary.style.cursor = 'pointer';
                 summary.style.fontSize = '1.2em';
                 summary.style.userSelect = 'none';
                 summary.style.listStyle = 'none';
                 summary.style.color = 'black';
                 
-                const styleEl = document.createElement('style');
-                styleEl.textContent = 'summary::-webkit-details-marker { display: none; }';
-                document.head.appendChild(styleEl);
-                
                 details.appendChild(summary);
                 
                 const secondaryContainer = document.createElement('div');
+                secondaryContainer.className = 'style-secondary-container';
                 secondaryContainer.style.marginTop = '5px';
                 secondaryContainer.style.display = 'flex';
                 secondaryContainer.style.flexWrap = 'wrap';
                 secondaryContainer.style.gap = '10px';
                 secondaryContainer.style.position = 'absolute';
                 secondaryContainer.style.top = '100%';
-                secondaryContainer.style.left = '0';
+                secondaryContainer.style.right = '0';
                 secondaryContainer.style.zIndex = '100';
                 secondaryContainer.style.background = 'white';
                 secondaryContainer.style.border = '1px solid #ccc';
@@ -180,7 +193,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 details.appendChild(secondaryContainer);
                 styleBox.appendChild(details);
+
+                // Powstrzymaj propagację kliknięcia w detale stylów, żeby nie zwijać eventu
+                details.addEventListener('click', e => e.stopPropagation());
             }
+            
+            styleBox.style.display = 'none';
+            headerContent.appendChild(styleBox);
 
 			function updateMiejscaOptions(miasto) {
 				if (miasto === 'Inne') {
@@ -208,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			checkbox.addEventListener('change', function () {
 				eventBlock.style.display = this.checked ? 'block' : 'none'
                 promoteLabel.style.display = this.checked ? 'inline-block' : 'none'
+                styleBox.style.display = this.checked ? 'flex' : 'none'
                 if (typeof updateEventCounter === 'function') updateEventCounter();
                 
                 // Automatyczne dodawanie nowego wydarzenia
@@ -252,10 +272,13 @@ document.addEventListener('DOMContentLoaded', function () {
 				inputMiastoInne,
 				selectMiejsce,
 				inputMiejsceInne,
-				inputLink,
-                styleBox
+				inputLink
 			)
 			container.append(toggle, eventBlock)
+            
+            // Styl dla headera, żeby checkbox był w linii z resztą
+            toggle.classList.add('event-header')
+            
 			return container;
 		}
 
@@ -423,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const opis = eventBlock.querySelector('.opis').value;
                 const link = eventBlock.querySelector('.link').value;
                 
-                const styleActive = Array.from(eventBlock.querySelectorAll('input.styl:checked')).map(cb => cb.value);
+                const styleActive = Array.from(container.querySelectorAll('input.styl:checked')).map(cb => cb.value);
 
                 // Zapisujemy tylko jeśli cokolwiek jest zmienione/zaznaczone, żeby nie puchło
                 if (isChecked || link || opis || miasto !== 'Katowice') { 
@@ -478,7 +501,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     const promote = container.querySelector('.promowane');
                     promote.checked = ev.promote;
-                    if (ev.checked) promote.parentElement.style.display = 'inline-block';
+                    if (ev.checked) {
+                        promote.parentElement.style.display = 'inline-block';
+                        container.querySelector('.checkboxes').style.display = 'flex';
+                    }
 
                     eventBlock.style.display = ev.checked ? 'block' : 'none';
 
@@ -504,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     miejsceSelect.dispatchEvent(new Event('change'));
 
                     // Style
-                    const styleCbs = eventBlock.querySelectorAll('input.styl');
+                    const styleCbs = container.querySelectorAll('input.styl');
                     styleCbs.forEach(cb => {
                         cb.checked = ev.style && ev.style.includes(cb.value);
                     });
@@ -1177,7 +1203,8 @@ function generujPost() {
 			const miejsce = eventBlock.querySelector('.miejsce')
 			const miejsceInne = eventBlock.querySelector('.miejsce-inne')
 			const link = eventBlock.querySelector('.link')
-			const styleCbs = eventBlock.querySelectorAll('input.styl:checked')
+			const container = eventBlock.parentElement;
+			const styleCbs = container.querySelectorAll('input.styl:checked')
 			// Promote checkbox teraz jest w headerze (toggle-checkbox sibling)
 			const promote = toggleLabel.querySelector('.promowane').checked
 
