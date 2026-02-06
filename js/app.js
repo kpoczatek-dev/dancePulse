@@ -1197,7 +1197,7 @@ function generujPost() {
 
 	wynik += '@wszyscy Do zobaczenia na parkiecie! 💃🕺\n\n'
     wynik += '📝 PS1: Chcesz zgłosić imprezę? Wypełnij krótki formularz, a dodamy ją do następnego zestawienia: 👉 https://tiny.pl/2bc8z7649\n\n'
-    wynik += '☕️ PS2: Podoba Ci się to, co robię? Jeśli chcesz, możesz postawić mi wirtualną kawę – to daje mi mega kopa do dalszego działania dla Was! 👉 www.buycoffee.to/katosalsahub\n\n'
+    wynik += '☕️ PS2: Podoba Ci się to, co robię? Jeśli chcesz, możesz postawić mi wirtualną kawę – to daje mi mega kopa do dalszego działania dla Was! 👉 https://buycoffee.to/katosalsahub\n\n'
     wynik += document.getElementById('hashtagi').value
 	document.getElementById('wynik').value = wynik
 	document.getElementById('wynik').value = wynik
